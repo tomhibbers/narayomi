@@ -1,14 +1,37 @@
 import 'package:flutter/material.dart';
+import 'package:narayomi/models/content_type.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'pages/library_page.dart';
 import 'pages/updates_page.dart';
 import 'pages/browse_page.dart';
 import 'pages/settings_page.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'models/catalog.dart';
+import 'models/publication.dart';
+import 'models/chapter.dart';
+import 'models/chapter_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Hive.initFlutter();
+
+  // Register Hive Adapters
+  Hive.registerAdapter(CatalogAdapter());
+  Hive.registerAdapter(PublicationAdapter());
+  Hive.registerAdapter(ChapterAdapter());
+  Hive.registerAdapter(ChapterPageAdapter()); 
+  Hive.registerAdapter(ContentTypeAdapter());
+
+  // Open Hive Boxes (Databases)
+  await Hive.openBox<Catalog>('catalogs');
+  await Hive.openBox<Publication>('publications');
+  await Hive.openBox<Chapter>('chapters');
+  await Hive.openBox<ChapterPage>('chapter_pages');
+
+  // Load Theme Preference
   final prefs = await SharedPreferences.getInstance();
-  final isDarkMode = prefs.getBool('isDarkMode') ?? true; // Load saved theme
+  final isDarkMode = prefs.getBool('isDarkMode') ?? true;
+
   runApp(MyApp(isDarkMode: isDarkMode));
 }
 
