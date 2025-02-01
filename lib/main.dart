@@ -19,7 +19,7 @@ void main() async {
   Hive.registerAdapter(CatalogAdapter());
   Hive.registerAdapter(PublicationAdapter());
   Hive.registerAdapter(ChapterAdapter());
-  Hive.registerAdapter(ChapterPageAdapter()); 
+  Hive.registerAdapter(ChapterPageAdapter());
   Hive.registerAdapter(ContentTypeAdapter());
 
   // Open Hive Boxes (Databases)
@@ -106,13 +106,10 @@ class _MyAppState extends State<MyApp> {
               ),
             ),
       home: Scaffold(
-        appBar: AppBar(
-          title: Text(_selectedIndex == 3 ? 'Settings' : 'Flutter App'),
-        ),
         body: [
           LibraryPage(),
-          UpdatesPage(),
           BrowsePage(),
+          UpdatesPage(),
           SettingsPage(),
         ][_selectedIndex],
         bottomNavigationBar: BottomNavigationBar(
@@ -122,9 +119,9 @@ class _MyAppState extends State<MyApp> {
           items: const [
             BottomNavigationBarItem(
                 icon: Icon(Icons.library_books), label: 'Library'),
-            BottomNavigationBarItem(icon: Icon(Icons.update), label: 'Updates'),
             BottomNavigationBarItem(
                 icon: Icon(Icons.browse_gallery), label: 'Browse'),
+            BottomNavigationBarItem(icon: Icon(Icons.update), label: 'Updates'),
             BottomNavigationBarItem(icon: Icon(Icons.more_vert), label: 'More'),
           ],
         ),
