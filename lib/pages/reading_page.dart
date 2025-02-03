@@ -8,52 +8,82 @@ import 'package:narayomi/widgets/reading/reading_bottom_bar.dart';
 import 'package:narayomi/widgets/reading/reading_scroll_indicator.dart';
 
 class ReadingPage extends StatefulWidget {
-  final Chapter chapter;
+  final List<Chapter> chapters;
+  final int initialIndex;
 
-  const ReadingPage({super.key, required this.chapter});
+  const ReadingPage(
+      {super.key, required this.chapters, required this.initialIndex});
 
   @override
   _ReadingPageState createState() => _ReadingPageState();
 }
 
 class _ReadingPageState extends State<ReadingPage> {
-  ChapterDetails? chapterDetails;
+  List<ChapterDetails> loadedChapters = [];
   bool isLoading = true;
-  bool isUIVisible = false; // ✅ UI starts hidden
-  double scrollProgress = 0.0; // ✅ Scroll position (0 = top, 1 = bottom)
+  bool isUIVisible = false;
+  double scrollProgress = 0.0;
+  late int currentChapterIndex;
 
   final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    _fetchChapterContent();
-    _scrollController.addListener(_updateScrollProgress);
+    currentChapterIndex = widget.initialIndex;
+    _fetchChapter(widget.chapters[currentChapterIndex]);
+
+    // ✅ Attach scroll listener
+    _scrollController.addListener(_handleScroll);
   }
 
-  Future<void> _fetchChapterContent() async {
-    log("📖 Fetching chapter content for: ${widget.chapter.name}");
+  void _handleScroll() {
+    if (_scrollController.hasClients) {
+      double maxScroll = _scrollController.position.maxScrollExtent;
+      double currentScroll = _scrollController.position.pixels;
 
-    ChapterDetails details = await scrapeChapterDetails(widget.chapter.url, widget.chapter.publicationId);
+      double newProgress = (maxScroll == 0) ? 0 : currentScroll / maxScroll;
+
+      log("📜 SCROLLING: current = $currentScroll, max = $maxScroll, progress = $newProgress");
+
+      setState(() {
+        scrollProgress =
+            newProgress.clamp(0.0, 1.0); // ✅ Keep within valid range
+      });
+    }
+  }
+
+  Future<void> _fetchChapter(Chapter chapter) async {
+    log("📖 Fetching chapter content for: ${chapter.name}");
+
+    setState(() => isLoading = true);
+    ChapterDetails details =
+        await scrapeChapterDetails(chapter.url, chapter.publicationId);
 
     setState(() {
-      chapterDetails = details;
+      loadedChapters = [details]; // Replace current chapter data
       isLoading = false;
     });
   }
 
   void _toggleUI() {
-    setState(() {
-      isUIVisible = !isUIVisible;
-    });
+    setState(() => isUIVisible = !isUIVisible);
   }
 
-  void _updateScrollProgress() {
-    if (_scrollController.hasClients) {
-      double maxScroll = _scrollController.position.maxScrollExtent;
-      double currentScroll = _scrollController.position.pixels;
+  void _loadPreviousChapter() {
+    if (currentChapterIndex + 1 < widget.chapters.length) {
       setState(() {
-        scrollProgress = (maxScroll == 0) ? 0 : currentScroll / maxScroll;
+        currentChapterIndex += 1;
+        _fetchChapter(widget.chapters[currentChapterIndex]);
+      });
+    }
+  }
+
+  void _loadNextChapter() {
+    if (currentChapterIndex - 1 >= 0) {
+      setState(() {
+        currentChapterIndex -= 1;
+        _fetchChapter(widget.chapters[currentChapterIndex]);
       });
     }
   }
@@ -61,30 +91,45 @@ class _ReadingPageState extends State<ReadingPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black, // ✅ Dark background for reading mode
+      backgroundColor: Colors.black,
       body: Stack(
         children: [
-          // ✅ Chapter Content
           GestureDetector(
-            onTap: _toggleUI, // ✅ Tap to show/hide UI
+            onTap: _toggleUI,
             child: Center(
               child: isLoading
                   ? CircularProgressIndicator()
-                  : SingleChildScrollView(
-                      controller: _scrollController, // ✅ Track scrolling
+                  : ListView.builder(
+                      controller: _scrollController,
                       padding: EdgeInsets.all(16.0),
-                      child: Text(
-                        chapterDetails?.pages.first.text ?? "No content available",
-                        style: TextStyle(fontSize: 18, color: Colors.white),
-                      ),
+                      itemCount: loadedChapters.length,
+                      itemBuilder: (context, index) {
+                        return Padding(
+                          padding: EdgeInsets.only(bottom: 32.0),
+                          child: Text(
+                            loadedChapters[index].pages.first.text ??
+                                "No content available",
+                            style: TextStyle(fontSize: 18, color: Colors.white),
+                          ),
+                        );
+                      },
                     ),
             ),
           ),
 
-          // ✅ Use Components
+          // ✅ UI Components
           ReadingScrollIndicator(scrollProgress: scrollProgress),
-          ReadingTopBar(title: widget.chapter.name, isVisible: isUIVisible),
-          ReadingBottomBar(isVisible: isUIVisible),
+          ReadingTopBar(
+              title: widget.chapters[currentChapterIndex].name,
+              isVisible: isUIVisible),
+          ReadingBottomBar(
+            isVisible: isUIVisible,
+            onPrevious: _loadPreviousChapter,
+            onNext: _loadNextChapter,
+            hasPrevious: currentChapterIndex + 1 < widget.chapters.length,
+            hasNext: currentChapterIndex - 1 >= 0,
+            scrollController: _scrollController, // ✅ Pass scrollController
+          ),
         ],
       ),
     );

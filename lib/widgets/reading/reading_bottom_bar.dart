@@ -1,47 +1,67 @@
 import 'package:flutter/material.dart';
-import 'dart:developer';
 
 class ReadingBottomBar extends StatelessWidget {
   final bool isVisible;
+  final VoidCallback onPrevious;
+  final VoidCallback onNext;
+  final bool hasPrevious;
+  final bool hasNext;
+  final ScrollController scrollController;
 
-  const ReadingBottomBar({super.key, required this.isVisible});
+  const ReadingBottomBar({
+    super.key,
+    required this.isVisible,
+    required this.onPrevious,
+    required this.onNext,
+    required this.hasPrevious,
+    required this.hasNext,
+    required this.scrollController,
+  });
 
   @override
   Widget build(BuildContext context) {
     return AnimatedPositioned(
-      duration: Duration(milliseconds: 200),
-      bottom: isVisible ? 0 : -80, // Moves out of view instead of affecting scroll
+      duration: Duration(milliseconds: 300),
+      bottom: isVisible ? 0 : -60,
       left: 0,
       right: 0,
       child: Container(
-        padding: EdgeInsets.symmetric(vertical: 10, horizontal: 30),
-        decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.8),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
-        ),
+        color: Colors.black.withOpacity(0.7),
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             IconButton(
+              icon: Icon(Icons.arrow_back,
+                  color: hasPrevious ? Colors.white : Colors.grey),
+              onPressed: hasPrevious
+                  ? () {
+                      onPrevious();
+                      scrollController.jumpTo(0); // ✅ Properly resets scrollbar
+                    }
+                  : null,
+            ),
+            IconButton(
               icon: Icon(Icons.list, color: Colors.white),
-              onPressed: () {
-                log("📜 Chapter List clicked");
-                // TODO: Implement chapter list popup
-              },
+              onPressed: () {}, // Placeholder for chapter list
             ),
             IconButton(
               icon: Icon(Icons.language, color: Colors.white),
-              onPressed: () {
-                log("🌐 View Original Webpage clicked");
-                // TODO: Implement open webview
-              },
+              onPressed: () {}, // Placeholder for webview
             ),
             IconButton(
               icon: Icon(Icons.settings, color: Colors.white),
-              onPressed: () {
-                log("⚙️ Reader Settings clicked");
-                // TODO: Implement reader settings popup
-              },
+              onPressed: () {}, // Placeholder for reader settings
+            ),
+            IconButton(
+              icon: Icon(Icons.arrow_forward,
+                  color: hasNext ? Colors.white : Colors.grey),
+              onPressed: hasNext
+                  ? () {
+                      onNext();
+                      scrollController.jumpTo(0); // ✅ Properly resets scrollbar
+                    }
+                  : null,
             ),
           ],
         ),

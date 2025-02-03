@@ -13,9 +13,9 @@ class ChaptersComponent extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(height: 20),
-        Text("Chapters", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+        Text("Chapters",
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
         SizedBox(height: 8),
-
         ListView.builder(
           shrinkWrap: true,
           physics: NeverScrollableScrollPhysics(),
@@ -25,12 +25,17 @@ class ChaptersComponent extends StatelessWidget {
             return ListTile(
               title: Text(chapter.name),
               subtitle: Text("Uploaded: ${chapter.dateUpload?.toLocal()}"),
-              trailing: Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+              trailing:
+                  Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
               onTap: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => ReadingPage(chapter: chapter),
+                    builder: (context) => ReadingPage(
+                      chapters: chapters, // ✅ Pass the full chapter list
+                      initialIndex:
+                          index, // ✅ Set the clicked chapter as initial
+                    ),
                   ),
                 );
               },
