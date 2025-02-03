@@ -4,8 +4,9 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:html/dom.dart';
 import 'package:html/parser.dart' as html_parser;
 import 'package:narayomi/models/chapter.dart';
+import 'package:narayomi/models/chapter_details.dart';
+import 'package:narayomi/models/chapter_page.dart';
 import 'package:narayomi/models/publication_details.dart';
-import 'package:xpath_selector_html_parser/xpath_selector_html_parser.dart';
 import '../models/publication.dart';
 import '../models/content_type.dart';
 
@@ -153,6 +154,68 @@ Future<PublicationDetails> scrapePublicationDetails(String url) async {
       controller.dispose();
       completer.complete(
           PublicationDetails(publication: publication!, chapters: chapters));
+    },
+  );
+
+  await headlessWebView.run();
+  return completer.future;
+}
+
+Future<ChapterDetails> scrapeChapterDetails(String url, int publicationId) async {
+  Completer<ChapterDetails> completer = Completer();
+  Chapter? chapter;
+  List<ChapterPage> pages = [];
+
+  var headlessWebView = HeadlessInAppWebView(
+    initialUrlRequest: URLRequest(url: WebUri(url)),
+    onLoadStop: (controller, url) async {
+      log('✅ onLoadStop triggered for chapter: $url');
+
+      // ✅ Convert WebUri? to String
+      var currentUrl = url?.toString() ?? "";
+
+      // ✅ Get the full HTML source
+      String htmlString = await controller.evaluateJavascript(
+          source: "document.documentElement.outerHTML"
+      ) as String;
+
+      Document document = html_parser.parse(htmlString);
+
+      // ✅ Extract Chapter Title
+      String? chapterTitle = document.querySelector('h1.title')?.text.trim();
+
+      // ✅ Extract Chapter Content with Paragraph Formatting
+      String formattedText = "";
+      List<Element> paragraphs = document.querySelectorAll('#arrticle p');
+      for (var paragraph in paragraphs) {
+        formattedText += paragraph.text.trim() + "\n\n"; // ✅ Add double line breaks for readability
+      }
+
+      // ✅ Create Chapter Model
+      chapter = Chapter(
+        id: currentUrl.hashCode, // Temporary unique ID
+        publicationId: publicationId,
+        name: chapterTitle ?? "Unknown Chapter",
+        url: currentUrl,
+        dateUpload: DateTime.now(), // Placeholder (actual date parsing can be added)
+      );
+
+      // ✅ Ensure chapter is not null before accessing its properties
+      if (formattedText.isNotEmpty && chapter != null) {
+        pages.add(ChapterPage(
+          id: pages.length + 1, // Unique ID for Hive storage
+          chapterId: chapter!.id, // ✅ Now safe since chapter is confirmed non-null
+          pageNo: 1, // Only one page for novels
+          finished: false, // Default to unread
+          url: currentUrl,
+          imageUrl: null, // No images for novels
+          text: formattedText, // ✅ Store properly formatted text
+        ));
+      }
+
+      // ✅ Dispose WebView & complete future
+      controller.dispose();
+      completer.complete(ChapterDetails(chapter: chapter!, pages: pages));
     },
   );
 
