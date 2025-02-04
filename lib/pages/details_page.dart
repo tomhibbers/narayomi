@@ -4,6 +4,7 @@ import 'package:narayomi/models/publication.dart';
 import 'package:narayomi/models/chapter.dart';
 import 'package:narayomi/models/publication_details.dart';
 import 'package:narayomi/services/ranobes_scraper.dart';
+import 'package:narayomi/widgets/details/genres_component.dart';
 import 'package:narayomi/widgets/details/publication_info.dart';
 import 'package:narayomi/widgets/details/expandable_description.dart';
 import 'package:narayomi/widgets/details/action_buttons.dart';
@@ -129,6 +130,8 @@ class _DetailsPageState extends State<DetailsPage> {
                           ExpandableDescription(
                               description: publication?.description ??
                                   "No description available."),
+                          SizedBox(height: 16),
+                          GenresComponent(genres: publication!.genres ?? []),
                           SizedBox(height: 16),
                           ChaptersComponent(chapters: chapters),
                         ],

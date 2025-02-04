@@ -9,8 +9,40 @@ import 'package:narayomi/models/chapter_page.dart';
 import 'package:narayomi/models/publication_details.dart';
 import '../models/publication.dart';
 import '../models/content_type.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
-String htmlString = ""; // ✅ Store for debugging
+DateTime parseRelativeTime(String relativeTime) {
+  final now = DateTime.now();
+  final regex =
+      RegExp(r'(\d+)\s+(second|minute|hour|day|week|month|year)s?\s+ago');
+
+  final match = regex.firstMatch(relativeTime);
+  if (match != null) {
+    int value = int.parse(match.group(1)!);
+    String unit = match.group(2)!;
+
+    switch (unit) {
+      case 'second':
+        return now.subtract(Duration(seconds: value));
+      case 'minute':
+        return now.subtract(Duration(minutes: value));
+      case 'hour':
+        return now.subtract(Duration(hours: value));
+      case 'day':
+        return now.subtract(Duration(days: value));
+      case 'week':
+        return now.subtract(Duration(days: value * 7));
+      case 'month':
+        return DateTime(now.year, now.month - value, now.day);
+      case 'year':
+        return DateTime(now.year - value, now.month, now.day);
+    }
+  }
+
+  return now; // Default fallback if parsing fails
+}
+
+String htmlString = "";
 
 Future<List<Publication>> scrapeRaNobesInBackgroundSearch(String query) async {
   Completer<List<Publication>> completer = Completer();
@@ -50,7 +82,7 @@ Future<List<Publication>> scrapeRaNobesInBackgroundSearch(String query) async {
             Publication(
               id: url.split('/').last,
               title: title,
-              type: ContentType.Novel, // ✅ Assuming it's a novel
+              type: ContentType.Novel,
               url: url,
               thumbnailUrl: imageUrl,
               dateAdded: DateTime.now(),
@@ -61,14 +93,13 @@ Future<List<Publication>> scrapeRaNobesInBackgroundSearch(String query) async {
         }
       }
 
-      // ✅ Dispose WebView BEFORE completing the future
       controller.dispose();
       completer.complete(results);
     },
   );
 
   await headlessWebView.run();
-  return completer.future; // ✅ Ensures function waits until scraping is done
+  return completer.future;
 }
 
 Future<PublicationDetails> scrapePublicationDetails(String url) async {
@@ -83,25 +114,78 @@ Future<PublicationDetails> scrapePublicationDetails(String url) async {
           source: "document.documentElement.outerHTML");
 
       Document document = html_parser.parse(htmlString);
-      // final doc = HtmlXPath.html(htmlString);
 
-      String title =
-          document.querySelector('.title')?.text.trim() ?? "Unknown Title";
+      // Extract title without subtitle
+      String extractTitle(Element? element) {
+        if (element == null) return "Unknown Title";
+
+        // Extract only the first non-span text
+        String extractedText = element.nodes
+            .whereType<Text>()
+            .map((node) => node.text.trim())
+            .join(" ")
+            .trim(); // Ensure we trim extra spaces
+
+        // ✅ Fallback: If empty or just a space, try grabbing from <span itemprop="name">
+        if (extractedText.isEmpty) {
+          extractedText =
+              element.querySelector('span[itemprop="name"]')?.text.trim() ??
+                  "Unknown Title";
+        }
+
+        return extractedText;
+      }
+
+      String title = extractTitle(document.querySelector('.title'));
+
       String? author =
           document.querySelector('span[itemprop="creator"] a')?.text.trim();
-      String? status = document.querySelector('.test')?.text.trim();
-      // ✅ Try getting image from <a class="highslide">
+
+      //ranobes statuses: Any, Ongoing, Completed, Hiatus, Dropped
+      String extractStatus(Document document) {
+        // Find all <li> elements
+        List<Element> listItems = document.querySelectorAll("ul li");
+
+        for (var item in listItems) {
+          // ✅ Check if the <li> contains "Status in COO:"
+          if (item.text.contains("Status in COO:")) {
+            // ✅ Extract text inside <span class="grey"> inside the <li>
+            return item.querySelector("span.grey a")?.text.trim() ??
+                "Unknown Status";
+          }
+        }
+
+        return "Unknown Status"; // Default if not found
+      }
+
+      String status = extractStatus(document);
+
       Element? imageElement = document.querySelector('div.poster a.highslide');
       String? thumbnailUrl = imageElement?.attributes['href'];
 
       String? description = document.querySelector('.moreless')?.text.trim();
 
-      // ✅ If <a> doesn't contain the image, fallback to <figure>'s background-image
+      List<String> extractGenres(Document document) {
+        // ✅ Find the "links" div inside the genre section
+        Element? genreContainer = document.querySelector('#mc-fs-genre .links');
+
+        if (genreContainer != null) {
+          // ✅ Extract text from all <a> elements inside the div
+          return genreContainer
+              .querySelectorAll('a')
+              .map((e) => e.text.trim())
+              .toList();
+        }
+
+        return []; // Default to empty list if not found
+      }
+
+      List<String> genres = extractGenres(document);
+
       if (thumbnailUrl == null || thumbnailUrl.isEmpty) {
         Element? figureElement = document.querySelector('figure.cover');
         String? style = figureElement?.attributes['style'];
 
-        // Extract the URL from the style attribute
         if (style != null) {
           RegExp regExp = RegExp(r'background-image:\s*url\(([^)]+)\)');
           Match? match = regExp.firstMatch(style);
@@ -112,18 +196,17 @@ Future<PublicationDetails> scrapePublicationDetails(String url) async {
       }
 
       publication = Publication(
-        id: url.toString().split('/').last,
-        title: title,
-        author: author,
-        status: status,
-        thumbnailUrl: thumbnailUrl,
-        description: description,
-        type: ContentType.Novel, // Assume novel for now
-        dateAdded: DateTime.now(),
-        url: url.toString(),
-      );
+          id: url.toString().split('/').last,
+          title: title,
+          author: author,
+          status: status,
+          thumbnailUrl: thumbnailUrl,
+          description: description,
+          type: ContentType.Novel,
+          dateAdded: DateTime.now(),
+          url: url.toString(),
+          genres: genres);
 
-      // ✅ Extract list of chapters
       List<Element> chapterElements =
           document.querySelectorAll('.chapters-scroll-list li');
       for (var chapterElement in chapterElements) {
@@ -131,8 +214,11 @@ Future<PublicationDetails> scrapePublicationDetails(String url) async {
             chapterElement.querySelector('.title')?.text.trim();
         String? chapterUrl =
             chapterElement.querySelector('a')?.attributes['href'];
-        String? dateUploaded =
-            chapterElement.querySelector('.chapter-date')?.text.trim();
+        String? dateUploadedText =
+            chapterElement.querySelector('.grey')?.text.trim();
+        DateTime? dateUploaded = dateUploadedText != null
+            ? parseRelativeTime(dateUploadedText)
+            : null;
 
         if (chapterTitle != null && chapterUrl != null) {
           chapters.add(Chapter(
@@ -140,13 +226,11 @@ Future<PublicationDetails> scrapePublicationDetails(String url) async {
             publicationId: publication!.id.hashCode, // Temporary unique ID
             name: chapterTitle,
             url: chapterUrl,
-            dateUpload:
-                dateUploaded != null ? DateTime.tryParse(dateUploaded) : null,
+            dateUpload: dateUploaded,
           ));
         }
       }
 
-      // ✅ Dispose WebView & complete future
       controller.dispose();
       completer.complete(
           PublicationDetails(publication: publication!, chapters: chapters));
@@ -166,27 +250,21 @@ Future<ChapterDetails> scrapeChapterDetails(
   var headlessWebView = HeadlessInAppWebView(
     initialUrlRequest: URLRequest(url: WebUri(url)),
     onLoadStop: (controller, url) async {
-      // ✅ Convert WebUri? to String
       var currentUrl = url?.toString() ?? "";
 
-      // ✅ Get the full HTML source
       String htmlString = await controller.evaluateJavascript(
           source: "document.documentElement.outerHTML") as String;
 
       Document document = html_parser.parse(htmlString);
 
-      // ✅ Extract Chapter Title
       String? chapterTitle = document.querySelector('h1.title')?.text.trim();
 
-      // ✅ Extract Chapter Content with Paragraph Formatting
       String formattedText = "";
       List<Element> paragraphs = document.querySelectorAll('#arrticle p');
       for (var paragraph in paragraphs) {
-        formattedText += paragraph.text.trim() +
-            "\n\n"; // ✅ Add double line breaks for readability
+        formattedText += paragraph.text.trim() + "\n\n";
       }
 
-      // ✅ Create Chapter Model
       chapter = Chapter(
         id: currentUrl.hashCode, // Temporary unique ID
         publicationId: publicationId,
@@ -196,7 +274,6 @@ Future<ChapterDetails> scrapeChapterDetails(
             DateTime.now(), // Placeholder (actual date parsing can be added)
       );
 
-      // ✅ Ensure chapter is not null before accessing its properties
       if (formattedText.isNotEmpty && chapter != null) {
         pages.add(ChapterPage(
           id: pages.length + 1, // Unique ID for Hive storage
@@ -210,7 +287,6 @@ Future<ChapterDetails> scrapeChapterDetails(
         ));
       }
 
-      // ✅ Dispose WebView & complete future
       controller.dispose();
       completer.complete(ChapterDetails(chapter: chapter!, pages: pages));
     },
