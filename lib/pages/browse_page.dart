@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:narayomi/widgets/common/publication_card.dart';
 import '../models/publication.dart';
 import '../services/ranobes_scraper.dart';
 import '../services/comick_scraper.dart';
@@ -9,7 +10,8 @@ class BrowsePage extends StatefulWidget {
   _BrowsePageState createState() => _BrowsePageState();
 }
 
-class _BrowsePageState extends State<BrowsePage> with SingleTickerProviderStateMixin {
+class _BrowsePageState extends State<BrowsePage>
+    with SingleTickerProviderStateMixin {
   List<Publication> searchResults = [];
   TextEditingController _controller = TextEditingController();
   bool isLoading = false;
@@ -80,22 +82,9 @@ class _BrowsePageState extends State<BrowsePage> with SingleTickerProviderStateM
                 : ListView.builder(
                     itemCount: searchResults.length,
                     itemBuilder: (context, index) {
-                      var item = searchResults[index];
-                      return ListTile(
-                        leading: item.thumbnailUrl != null
-                            ? Image.network(item.thumbnailUrl!, width: 50, height: 50, fit: BoxFit.cover)
-                            : Icon(Icons.book),
-                        title: Text(item.title),
-                        subtitle: Text("Tap to view details"),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => DetailsPage(publicationUrl: item.url!),
-                            ),
-                          );
-                        },
-                      );
+                      return PublicationCard(
+                          publication: searchResults[
+                              index]); // ✅ Now using PublicationCard
                     },
                   ),
           ),

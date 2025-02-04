@@ -21,7 +21,6 @@ Future<List<Publication>> scrapeRaNobesInBackgroundSearch(String query) async {
       url: WebUri("https://ranobes.top/search/$query"),
     ),
     onLoadStop: (controller, url) async {
-      log('✅ onLoadStop triggered');
       htmlString = await controller.evaluateJavascript(
           source: "document.documentElement.outerHTML");
 
@@ -52,7 +51,6 @@ Future<List<Publication>> scrapeRaNobesInBackgroundSearch(String query) async {
               id: url.split('/').last,
               title: title,
               type: ContentType.Novel, // ✅ Assuming it's a novel
-              typeId: 1,
               url: url,
               thumbnailUrl: imageUrl,
               dateAdded: DateTime.now(),
@@ -81,7 +79,6 @@ Future<PublicationDetails> scrapePublicationDetails(String url) async {
   var headlessWebView = HeadlessInAppWebView(
     initialUrlRequest: URLRequest(url: WebUri(url)),
     onLoadStop: (controller, url) async {
-      log('✅ onLoadStop triggered');
       String htmlString = await controller.evaluateJavascript(
           source: "document.documentElement.outerHTML");
 
@@ -89,8 +86,7 @@ Future<PublicationDetails> scrapePublicationDetails(String url) async {
       // final doc = HtmlXPath.html(htmlString);
 
       String title =
-          document.querySelector('.title')?.text.trim() ??
-              "Unknown Title";
+          document.querySelector('.title')?.text.trim() ?? "Unknown Title";
       String? author =
           document.querySelector('span[itemprop="creator"] a')?.text.trim();
       String? status = document.querySelector('.test')?.text.trim();
@@ -123,8 +119,8 @@ Future<PublicationDetails> scrapePublicationDetails(String url) async {
         thumbnailUrl: thumbnailUrl,
         description: description,
         type: ContentType.Novel, // Assume novel for now
-        typeId: 1,
         dateAdded: DateTime.now(),
+        url: url.toString(),
       );
 
       // ✅ Extract list of chapters
@@ -161,7 +157,8 @@ Future<PublicationDetails> scrapePublicationDetails(String url) async {
   return completer.future;
 }
 
-Future<ChapterDetails> scrapeChapterDetails(String url, int publicationId) async {
+Future<ChapterDetails> scrapeChapterDetails(
+    String url, int publicationId) async {
   Completer<ChapterDetails> completer = Completer();
   Chapter? chapter;
   List<ChapterPage> pages = [];
@@ -169,15 +166,12 @@ Future<ChapterDetails> scrapeChapterDetails(String url, int publicationId) async
   var headlessWebView = HeadlessInAppWebView(
     initialUrlRequest: URLRequest(url: WebUri(url)),
     onLoadStop: (controller, url) async {
-      log('✅ onLoadStop triggered for chapter: $url');
-
       // ✅ Convert WebUri? to String
       var currentUrl = url?.toString() ?? "";
 
       // ✅ Get the full HTML source
       String htmlString = await controller.evaluateJavascript(
-          source: "document.documentElement.outerHTML"
-      ) as String;
+          source: "document.documentElement.outerHTML") as String;
 
       Document document = html_parser.parse(htmlString);
 
@@ -188,7 +182,8 @@ Future<ChapterDetails> scrapeChapterDetails(String url, int publicationId) async
       String formattedText = "";
       List<Element> paragraphs = document.querySelectorAll('#arrticle p');
       for (var paragraph in paragraphs) {
-        formattedText += paragraph.text.trim() + "\n\n"; // ✅ Add double line breaks for readability
+        formattedText += paragraph.text.trim() +
+            "\n\n"; // ✅ Add double line breaks for readability
       }
 
       // ✅ Create Chapter Model
@@ -197,14 +192,16 @@ Future<ChapterDetails> scrapeChapterDetails(String url, int publicationId) async
         publicationId: publicationId,
         name: chapterTitle ?? "Unknown Chapter",
         url: currentUrl,
-        dateUpload: DateTime.now(), // Placeholder (actual date parsing can be added)
+        dateUpload:
+            DateTime.now(), // Placeholder (actual date parsing can be added)
       );
 
       // ✅ Ensure chapter is not null before accessing its properties
       if (formattedText.isNotEmpty && chapter != null) {
         pages.add(ChapterPage(
           id: pages.length + 1, // Unique ID for Hive storage
-          chapterId: chapter!.id, // ✅ Now safe since chapter is confirmed non-null
+          chapterId:
+              chapter!.id, // ✅ Now safe since chapter is confirmed non-null
           pageNo: 1, // Only one page for novels
           finished: false, // Default to unread
           url: currentUrl,

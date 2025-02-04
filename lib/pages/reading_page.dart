@@ -129,6 +129,7 @@ class _ReadingPageState extends State<ReadingPage> {
             hasPrevious: currentChapterIndex + 1 < widget.chapters.length,
             hasNext: currentChapterIndex - 1 >= 0,
             scrollController: _scrollController, // ✅ Pass scrollController
+            chapter: widget.chapters[currentChapterIndex],
           ),
         ],
       ),

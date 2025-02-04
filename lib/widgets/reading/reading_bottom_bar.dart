@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:narayomi/pages/webview_page.dart';
+import 'package:narayomi/models/chapter.dart';
 
 class ReadingBottomBar extends StatelessWidget {
   final bool isVisible;
@@ -7,6 +9,7 @@ class ReadingBottomBar extends StatelessWidget {
   final bool hasPrevious;
   final bool hasNext;
   final ScrollController scrollController;
+  final Chapter chapter; // ✅ Pass the current chapter
 
   const ReadingBottomBar({
     super.key,
@@ -16,6 +19,7 @@ class ReadingBottomBar extends StatelessWidget {
     required this.hasPrevious,
     required this.hasNext,
     required this.scrollController,
+    required this.chapter, // ✅ Add this parameter
   });
 
   @override
@@ -46,8 +50,24 @@ class ReadingBottomBar extends StatelessWidget {
               onPressed: () {}, // Placeholder for chapter list
             ),
             IconButton(
-              icon: Icon(Icons.language, color: Colors.white),
-              onPressed: () {}, // Placeholder for webview
+              icon: Icon(Icons.public_outlined, color: Colors.white),
+              onPressed: () {
+                if (chapter.url.isNotEmpty) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => WebViewPage(
+                        url: chapter.url,
+                        publicationTitle: chapter.name,
+                      ),
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("No webpage available")),
+                  );
+                }
+              }, // ✅ Open WebView with chapter URL
             ),
             IconButton(
               icon: Icon(Icons.settings, color: Colors.white),

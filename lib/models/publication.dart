@@ -8,25 +8,23 @@ class Publication extends HiveObject {
   @HiveField(0) String id;
   @HiveField(1) String title;
   @HiveField(2) ContentType type;
-  @HiveField(3) int typeId;
-  @HiveField(4) String? url;
-  @HiveField(5) String? status;
-  @HiveField(6) String? rating;
-  @HiveField(7) int? catalogId;
-  @HiveField(8) List<String>? categories;
-  @HiveField(9) DateTime? dateAdded;
-  @HiveField(10) String? artist;
-  @HiveField(11) String? author;
-  @HiveField(12) String? description;
-  @HiveField(13) List<String>? genres;
-  @HiveField(14) String? thumbnailUrl;
-  @HiveField(15) DateTime? lastModifiedAt;
+  @HiveField(3) String? url;
+  @HiveField(4) String? status;
+  @HiveField(5) String? rating;
+  @HiveField(6) int? catalogId;
+  @HiveField(7) List<String>? categories;
+  @HiveField(8) DateTime? dateAdded;
+  @HiveField(9) String? artist;
+  @HiveField(10) String? author;
+  @HiveField(11) String? description;
+  @HiveField(12) List<String>? genres;
+  @HiveField(13) String? thumbnailUrl;
+  @HiveField(14) DateTime? lastModifiedAt;
 
   Publication({
     required this.id,
     required this.title,
     required this.type,
-    required this.typeId,
     this.url,
     this.status,
     this.rating,

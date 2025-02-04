@@ -15,20 +15,21 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
 
-  // Register Hive Adapters
+  // ✅ Register All Adapters
   Hive.registerAdapter(CatalogAdapter());
   Hive.registerAdapter(PublicationAdapter());
   Hive.registerAdapter(ChapterAdapter());
   Hive.registerAdapter(ChapterPageAdapter());
   Hive.registerAdapter(ContentTypeAdapter());
 
-  // Open Hive Boxes (Databases)
+  // ✅ Open All Hive Boxes
   await Hive.openBox<Catalog>('catalogs');
-  await Hive.openBox<Publication>('publications');
+  await Hive.openBox<Publication>(
+      'library_v3'); // 🔥 Keep 'library_v2' instead of 'publications'
   await Hive.openBox<Chapter>('chapters');
   await Hive.openBox<ChapterPage>('chapter_pages');
 
-  // Load Theme Preference
+  // ✅ Load Theme Preference
   final prefs = await SharedPreferences.getInstance();
   final isDarkMode = prefs.getBool('isDarkMode') ?? true;
 

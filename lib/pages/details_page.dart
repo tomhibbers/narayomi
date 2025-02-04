@@ -10,9 +10,11 @@ import 'package:narayomi/widgets/details/action_buttons.dart';
 import 'package:narayomi/widgets/details/chapters_component.dart';
 
 class DetailsPage extends StatefulWidget {
-  final String publicationUrl;
+  final Publication publication;
 
-  const DetailsPage({super.key, required this.publicationUrl});
+  const DetailsPage({super.key, required this.publication})
+      : assert(
+            publication != null, "Publication cannot be null"); // ✅ Debugging
 
   @override
   _DetailsPageState createState() => _DetailsPageState();
@@ -31,7 +33,8 @@ class _DetailsPageState extends State<DetailsPage> {
   }
 
   Future<void> _fetchPublicationDetails() async {
-    PublicationDetails details = await scrapePublicationDetails(widget.publicationUrl);
+    PublicationDetails details =
+        await scrapePublicationDetails(widget.publication?.url ?? "");
 
     setState(() {
       publication = details.publication;
@@ -61,7 +64,7 @@ class _DetailsPageState extends State<DetailsPage> {
                     title: Opacity(
                       opacity: _scrollOffset > 200 ? 1.0 : 0.0,
                       child: Text(
-                        publication!.title,
+                        publication?.title ?? "Loading...",
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -70,22 +73,39 @@ class _DetailsPageState extends State<DetailsPage> {
                       background: Stack(
                         fit: StackFit.expand,
                         children: [
-                          Image.network(publication!.thumbnailUrl!, fit: BoxFit.cover),
+                          publication?.thumbnailUrl != null
+                              ? Image.network(
+                                  publication!.thumbnailUrl!,
+                                  fit: BoxFit.cover,
+                                )
+                              : Container(
+                                  color: Colors.grey[800]), // ✅ Placeholder
                           Positioned.fill(
                             child: BackdropFilter(
                               filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                              child: Container(color: Colors.black.withOpacity(0.3)),
+                              child: Container(
+                                  color: Colors.black.withOpacity(0.3)),
                             ),
                           ),
-                          Positioned(left: 16, right: 16, bottom: 40, child: PublicationInfo(publication: publication!)),
+                          if (publication !=
+                              null) // ✅ Ensure publication is available
+                            Positioned(
+                              left: 16,
+                              right: 16,
+                              bottom: 40,
+                              child: PublicationInfo(publication: publication!),
+                            ),
                         ],
                       ),
                     ),
-                    leading: IconButton(icon: Icon(Icons.arrow_back), onPressed: () => Navigator.pop(context)),
+                    leading: IconButton(
+                        icon: Icon(Icons.arrow_back),
+                        onPressed: () => Navigator.pop(context)),
                     actions: [
-                      IconButton(icon: Icon(Icons.favorite_border), onPressed: () {}),
-                      IconButton(icon: Icon(Icons.download), onPressed: () {}),
-                      IconButton(icon: Icon(Icons.more_vert), onPressed: () {}),
+                      IconButton(
+                          icon: Icon(Icons.download_outlined), onPressed: () {}),
+                      IconButton(icon: Icon(Icons.filter_list_outlined), onPressed: () {}),
+                      IconButton(icon: Icon(Icons.more_vert_outlined), onPressed: () {}),
                     ],
                   ),
 
@@ -97,11 +117,20 @@ class _DetailsPageState extends State<DetailsPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           SizedBox(height: 16),
-                          ActionButtons(),
+                          if (publication !=
+                              null) // ✅ Check before using publication
+                            ActionButtons(
+                              publication: publication!,
+                              onTrack: () {
+                                // TODO: Implement track functionality
+                              },
+                            ),
                           SizedBox(height: 16),
-                          ExpandableDescription(description: publication!.description ?? "No description available."),
+                          ExpandableDescription(
+                              description: publication?.description ??
+                                  "No description available."),
                           SizedBox(height: 16),
-                          ChaptersComponent(chapters: chapters), // ✅ Add back the chapters section
+                          ChaptersComponent(chapters: chapters),
                         ],
                       ),
                     ),
