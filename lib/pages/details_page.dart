@@ -1,8 +1,10 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:narayomi/models/content_type.dart';
 import 'package:narayomi/models/publication.dart';
 import 'package:narayomi/models/chapter.dart';
 import 'package:narayomi/models/publication_details.dart';
+import 'package:narayomi/services/comick_scraper.dart';
 import 'package:narayomi/services/ranobes_scraper.dart';
 import 'package:narayomi/widgets/details/genres_component.dart';
 import 'package:narayomi/widgets/details/publication_info.dart';
@@ -34,14 +36,25 @@ class _DetailsPageState extends State<DetailsPage> {
   }
 
   Future<void> _fetchPublicationDetails() async {
-    PublicationDetails details =
-        await scrapePublicationDetails(widget.publication?.url ?? "");
+    if (widget.publication!.type == ContentType.Novel) {
+      PublicationDetails details =
+          await scrapeRaNobesPublicationDetails(widget.publication?.url ?? "");
 
-    setState(() {
-      publication = details.publication;
-      chapters = details.chapters;
-      isLoading = false;
-    });
+      setState(() {
+        publication = details.publication;
+        chapters = details.chapters;
+        isLoading = false;
+      });
+    } else {
+      PublicationDetails details =
+          await scrapeComickPublicationDetails(widget.publication?.url ?? "");
+
+      setState(() {
+        publication = details.publication;
+        chapters = details.chapters;
+        isLoading = false;
+      });
+    }
   }
 
   @override
@@ -104,9 +117,14 @@ class _DetailsPageState extends State<DetailsPage> {
                         onPressed: () => Navigator.pop(context)),
                     actions: [
                       IconButton(
-                          icon: Icon(Icons.download_outlined), onPressed: () {}),
-                      IconButton(icon: Icon(Icons.filter_list_outlined), onPressed: () {}),
-                      IconButton(icon: Icon(Icons.more_vert_outlined), onPressed: () {}),
+                          icon: Icon(Icons.download_outlined),
+                          onPressed: () {}),
+                      IconButton(
+                          icon: Icon(Icons.filter_list_outlined),
+                          onPressed: () {}),
+                      IconButton(
+                          icon: Icon(Icons.more_vert_outlined),
+                          onPressed: () {}),
                     ],
                   ),
 

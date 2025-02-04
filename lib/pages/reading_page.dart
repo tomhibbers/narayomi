@@ -58,7 +58,7 @@ class _ReadingPageState extends State<ReadingPage> {
 
     setState(() => isLoading = true);
     ChapterDetails details =
-        await scrapeChapterDetails(chapter.url, chapter.publicationId);
+        await scrapeRaNobesChapterDetails(chapter.url, chapter.publicationId);
 
     setState(() {
       loadedChapters = [details]; // Replace current chapter data

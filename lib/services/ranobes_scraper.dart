@@ -9,7 +9,6 @@ import 'package:narayomi/models/chapter_page.dart';
 import 'package:narayomi/models/publication_details.dart';
 import '../models/publication.dart';
 import '../models/content_type.dart';
-import 'package:timeago/timeago.dart' as timeago;
 
 DateTime parseRelativeTime(String relativeTime) {
   final now = DateTime.now();
@@ -44,7 +43,7 @@ DateTime parseRelativeTime(String relativeTime) {
 
 String htmlString = "";
 
-Future<List<Publication>> scrapeRaNobesInBackgroundSearch(String query) async {
+Future<List<Publication>> scrapeRaNobesSearch(String query) async {
   Completer<List<Publication>> completer = Completer();
   List<Publication> results = [];
 
@@ -102,7 +101,7 @@ Future<List<Publication>> scrapeRaNobesInBackgroundSearch(String query) async {
   return completer.future;
 }
 
-Future<PublicationDetails> scrapePublicationDetails(String url) async {
+Future<PublicationDetails> scrapeRaNobesPublicationDetails(String url) async {
   Completer<PublicationDetails> completer = Completer();
   Publication? publication;
   List<Chapter> chapters = [];
@@ -241,7 +240,7 @@ Future<PublicationDetails> scrapePublicationDetails(String url) async {
   return completer.future;
 }
 
-Future<ChapterDetails> scrapeChapterDetails(
+Future<ChapterDetails> scrapeRaNobesChapterDetails(
     String url, int publicationId) async {
   Completer<ChapterDetails> completer = Completer();
   Chapter? chapter;

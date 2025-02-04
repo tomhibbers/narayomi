@@ -35,9 +35,9 @@ class _BrowsePageState extends State<BrowsePage>
     List<Publication> results = [];
 
     if (_tabController.index == 0) {
-      results = await scrapeRaNobesInBackgroundSearch(query); // ✅ Light Novels
+      results = await scrapeRaNobesSearch(query); // ✅ Light Novels
     } else {
-      results = await scrapeComickInBackground(query); // ✅ Comics
+      results = await scrapeComickSearch(query); // ✅ Comics
     }
 
     setState(() {
