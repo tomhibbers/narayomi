@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:narayomi/models/content_type.dart';
 import 'package:narayomi/models/publication.dart';
@@ -6,6 +5,7 @@ import 'package:narayomi/models/chapter.dart';
 import 'package:narayomi/models/publication_details.dart';
 import 'package:narayomi/services/comick_scraper.dart';
 import 'package:narayomi/services/ranobes_scraper.dart';
+import 'package:narayomi/widgets/details/details_header.dart'; // ✅ Import the new widget
 import 'package:narayomi/widgets/details/genres_component.dart';
 import 'package:narayomi/widgets/details/publication_info.dart';
 import 'package:narayomi/widgets/details/expandable_description.dart';
@@ -16,8 +16,7 @@ class DetailsPage extends StatefulWidget {
   final Publication publication;
 
   const DetailsPage({super.key, required this.publication})
-      : assert(
-            publication != null, "Publication cannot be null"); // ✅ Debugging
+      : assert(publication != null, "Publication cannot be null");
 
   @override
   _DetailsPageState createState() => _DetailsPageState();
@@ -36,9 +35,9 @@ class _DetailsPageState extends State<DetailsPage> {
   }
 
   Future<void> _fetchPublicationDetails() async {
-    if (widget.publication!.type == ContentType.Novel) {
+    if (widget.publication.type == ContentType.Novel) {
       PublicationDetails details =
-          await scrapeRaNobesPublicationDetails(widget.publication?.url ?? "");
+          await scrapeRaNobesPublicationDetails(widget.publication.url ?? "");
 
       setState(() {
         publication = details.publication;
@@ -47,7 +46,7 @@ class _DetailsPageState extends State<DetailsPage> {
       });
     } else {
       PublicationDetails details =
-          await scrapeComickPublicationDetails(widget.publication?.url ?? "");
+          await scrapeComickPublicationDetails(widget.publication.url ?? "");
 
       setState(() {
         publication = details.publication;
@@ -71,64 +70,14 @@ class _DetailsPageState extends State<DetailsPage> {
               },
               child: CustomScrollView(
                 slivers: [
-                  // ✅ SliverAppBar with Blurred Background + Scroll-Aware Title
-                  SliverAppBar(
-                    expandedHeight: 350.0,
-                    pinned: true,
-                    title: Opacity(
-                      opacity: _scrollOffset > 200 ? 1.0 : 0.0,
-                      child: Text(
-                        publication?.title ?? "Loading...",
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                  /// ✅ Replacing SliverAppBar with `DetailsHeader`
+                  if (publication != null)
+                    DetailsHeader(
+                      publication: publication!,
+                      scrollOffset: _scrollOffset,
                     ),
-                    flexibleSpace: FlexibleSpaceBar(
-                      background: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          publication?.thumbnailUrl != null
-                              ? Image.network(
-                                  publication!.thumbnailUrl!,
-                                  fit: BoxFit.cover,
-                                )
-                              : Container(
-                                  color: Theme.of(context).colorScheme.background), // ✅ Placeholder
-                          Positioned.fill(
-                            child: BackdropFilter(
-                              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                              child: Container(
-                                  color: Theme.of(context).colorScheme.background.withOpacity(0.3)),
-                            ),
-                          ),
-                          if (publication !=
-                              null) // ✅ Ensure publication is available
-                            Positioned(
-                              left: 16,
-                              right: 16,
-                              bottom: 40,
-                              child: PublicationInfo(publication: publication!),
-                            ),
-                        ],
-                      ),
-                    ),
-                    leading: IconButton(
-                        icon: Icon(Icons.arrow_back),
-                        onPressed: () => Navigator.pop(context)),
-                    actions: [
-                      IconButton(
-                          icon: Icon(Icons.download_outlined),
-                          onPressed: () {}),
-                      IconButton(
-                          icon: Icon(Icons.filter_list_outlined),
-                          onPressed: () {}),
-                      IconButton(
-                          icon: Icon(Icons.more_vert_outlined),
-                          onPressed: () {}),
-                    ],
-                  ),
 
-                  // ✅ Action Buttons, Expandable Description, and Chapters
+                  /// ✅ Action Buttons, Description, and Chapters
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: EdgeInsets.symmetric(horizontal: 16.0),
@@ -136,8 +85,7 @@ class _DetailsPageState extends State<DetailsPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           SizedBox(height: 16),
-                          if (publication !=
-                              null) // ✅ Check before using publication
+                          if (publication != null)
                             ActionButtons(
                               publication: publication!,
                               onTrack: () {
@@ -146,12 +94,14 @@ class _DetailsPageState extends State<DetailsPage> {
                             ),
                           SizedBox(height: 16),
                           ExpandableDescription(
-                              description: publication?.description ??
-                                  "No description available."),
+                            description: publication?.description ??
+                                "No description available.",
+                          ),
                           SizedBox(height: 16),
                           GenresComponent(genres: publication!.genres ?? []),
                           SizedBox(height: 16),
-                          ChaptersComponent(chapters: chapters, publication: publication!),
+                          ChaptersComponent(
+                              chapters: chapters, publication: publication!),
                         ],
                       ),
                     ),
