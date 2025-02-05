@@ -3,6 +3,7 @@ import 'package:hive/hive.dart';
 import 'package:narayomi/models/content_type.dart';
 import 'package:narayomi/models/publication.dart';
 import 'package:narayomi/widgets/common/publication_card.dart';
+import 'package:narayomi/widgets/common/publication_list.dart';
 import 'dart:developer';
 
 class LibraryPage extends StatefulWidget {
@@ -14,6 +15,7 @@ class LibraryPage extends StatefulWidget {
 
 class _LibraryPageState extends State<LibraryPage>
     with SingleTickerProviderStateMixin {
+  bool isGridView = true; // ✅ Default to Grid View
   late TabController _tabController;
   List<Publication> novels = [];
   List<Publication> comics = [];
@@ -53,29 +55,25 @@ class _LibraryPageState extends State<LibraryPage>
             Tab(text: "Comics"),
           ],
         ),
+        actions: [
+          /// ✅ Toggle Button (Switch List/Grid View)
+          IconButton(
+            icon: Icon(isGridView ? Icons.view_list : Icons.grid_view),
+            onPressed: () {
+              setState(() {
+                isGridView = !isGridView;
+              });
+            },
+          ),
+        ],
       ),
       body: TabBarView(
         controller: _tabController,
         children: [
-          _buildLibraryList(novels),
-          _buildLibraryList(comics),
+          isGridView ? buildGridView(novels) : buildListView(novels),
+          isGridView ? buildGridView(comics) : buildListView(comics),
         ],
       ),
-    );
-  }
-
-  Widget _buildLibraryList(List<Publication> publications) {
-    if (publications.isEmpty) {
-      return Center(
-          child: Text("No items in your library."));
-    }
-
-    return ListView.builder(
-      padding: EdgeInsets.all(10),
-      itemCount: publications.length,
-      itemBuilder: (context, index) {
-        return PublicationCard(publication: publications[index]);
-      },
     );
   }
 
