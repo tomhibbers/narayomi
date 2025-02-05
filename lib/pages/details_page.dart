@@ -151,7 +151,7 @@ class _DetailsPageState extends State<DetailsPage> {
                           SizedBox(height: 16),
                           GenresComponent(genres: publication!.genres ?? []),
                           SizedBox(height: 16),
-                          ChaptersComponent(chapters: chapters),
+                          ChaptersComponent(chapters: chapters, publication: publication!),
                         ],
                       ),
                     ),

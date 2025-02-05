@@ -1,12 +1,17 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart'; // ✅ Import intl package
 import 'package:narayomi/models/chapter.dart';
+import 'package:narayomi/models/publication.dart';
 import 'package:narayomi/pages/reading_page.dart';
 
 class ChaptersComponent extends StatelessWidget {
   final List<Chapter> chapters;
+  final Publication publication;
 
-  const ChaptersComponent({super.key, required this.chapters});
+  const ChaptersComponent(
+      {super.key, required this.chapters, required this.publication});
 
   String formatDate(DateTime? date) {
     if (date == null) return "Unknown Date";
@@ -30,14 +35,17 @@ class ChaptersComponent extends StatelessWidget {
             final chapter = chapters[index];
             return ListTile(
               title: Text(chapter.name),
-              subtitle: Text(formatDate(chapter.dateUpload)), // ✅ Formatted date
+              subtitle:
+                  Text(formatDate(chapter.dateUpload)), // ✅ Formatted date
               trailing:
                   Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
               onTap: () {
+                log("🔄 Navigating to ReadingPage with: ${publication.title}, Type: ${publication.type}");
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => ReadingPage(
+                      publication: publication, // ✅ Pass the publication
                       chapters: chapters, // ✅ Pass the full chapter list
                       initialIndex:
                           index, // ✅ Set the clicked chapter as initial

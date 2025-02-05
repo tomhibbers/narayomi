@@ -293,3 +293,107 @@ Future<PublicationDetails> scrapeComickPublicationDetails(String url) async {
   await headlessWebView.run();
   return completer.future;
 }
+
+Future<ChapterDetails> scrapeComickChapterDetails(
+    String url, int publicationId) async {
+  Completer<ChapterDetails> completer = Completer();
+
+  Chapter chapter = Chapter(
+    id: publicationId,
+    publicationId: publicationId,
+    name: "Unknown Chapter",
+    url: url,
+    dateUpload: DateTime.now(),
+  );
+
+  List<ChapterPage> pages = [];
+  bool _isDisposed = false;
+  Set<String> uniqueUrls = {}; // ✅ Keep track of unique image URLs
+
+  var headlessWebView = HeadlessInAppWebView(
+      initialUrlRequest: URLRequest(url: WebUri(url)),
+      onLoadStop: (controller, url) async {
+        var currentUrl = url?.toString() ?? "";
+        if (_isDisposed) return;
+
+        try {
+          log("✅ Waiting for JavaScript execution...");
+          await Future.delayed(Duration(seconds: 2));
+
+          int retries = 0;
+          const int maxRetries = 3;
+
+          while (retries < maxRetries) {
+            // ✅ Get HTML source
+            htmlString = await controller.evaluateJavascript(
+                source: "document.documentElement.outerHTML");
+            Document document = html_parser.parse(htmlString);
+
+            // ✅ Select all page elements
+            List<Element> pageElements =
+                document.querySelectorAll('#images-reader-container > div');
+
+            int pageNo = 1;
+            int newPages = 0; // ✅ Track number of new pages added
+
+            for (var element in pageElements) {
+              String? imageUrl =
+                  element.querySelector('img')?.attributes['src'];
+
+              if (imageUrl != null && !uniqueUrls.contains(imageUrl)) {
+                uniqueUrls.add(imageUrl); // ✅ Store unique URLs
+
+                pages.add(ChapterPage(
+                  id: pageNo,
+                  chapterId: publicationId,
+                  pageNo: pageNo,
+                  finished: false,
+                  url: currentUrl,
+                  imageUrl: imageUrl,
+                  text: "page$pageNo",
+                ));
+                log("🖼️ Page Extracted: $imageUrl");
+                pageNo++;
+                newPages++; // ✅ Count new pages added
+              }
+            }
+
+            log("🔄 Loaded Unique Pages: ${uniqueUrls.length}");
+
+            // ✅ Stop scrolling if no new pages were found
+            if (newPages == 0) {
+              retries++;
+            } else {
+              retries = 0; // ✅ Reset retries if new data found
+            }
+
+            // ✅ Scroll down for more images
+            await controller.evaluateJavascript(source: """
+            window.scrollBy(0, window.innerHeight * 2);
+            """);
+
+            await Future.delayed(Duration(seconds: 1));
+          }
+
+          log("✅ Done scraping, completing future with ${pages.length} pages");
+        } catch (e) {
+          log("❌ Error during scraping: $e");
+        } finally {
+          if (!_isDisposed) {
+            _isDisposed = true;
+            controller.dispose();
+          }
+
+          log("✅ Final Extracted Pages: ${pages.length}");
+
+          if (!completer.isCompleted) {
+            completer.complete(ChapterDetails(chapter: chapter, pages: pages));
+          } else {
+            log("⚠️ Completer already completed, skipping duplicate call.");
+          }
+        }
+      });
+
+  await headlessWebView.run();
+  return completer.future;
+}

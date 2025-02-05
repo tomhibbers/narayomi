@@ -2,17 +2,27 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:narayomi/models/chapter.dart';
 import 'package:narayomi/models/chapter_details.dart';
+import 'package:narayomi/models/content_type.dart';
+import 'package:narayomi/models/publication.dart';
+import 'package:narayomi/services/comick_scraper.dart';
 import 'package:narayomi/services/ranobes_scraper.dart';
 import 'package:narayomi/widgets/reading/reading_top_bar.dart';
 import 'package:narayomi/widgets/reading/reading_bottom_bar.dart';
 import 'package:narayomi/widgets/reading/reading_scroll_indicator.dart';
+import 'package:narayomi/widgets/reading/novel_reader.dart';
+import 'package:narayomi/widgets/reading/comic_reader.dart';
 
 class ReadingPage extends StatefulWidget {
   final List<Chapter> chapters;
   final int initialIndex;
+  final Publication publication;
 
-  const ReadingPage(
-      {super.key, required this.chapters, required this.initialIndex});
+  const ReadingPage({
+    super.key,
+    required this.chapters,
+    required this.initialIndex,
+    required this.publication,
+  });
 
   @override
   _ReadingPageState createState() => _ReadingPageState();
@@ -41,10 +51,7 @@ class _ReadingPageState extends State<ReadingPage> {
     if (_scrollController.hasClients) {
       double maxScroll = _scrollController.position.maxScrollExtent;
       double currentScroll = _scrollController.position.pixels;
-
       double newProgress = (maxScroll == 0) ? 0 : currentScroll / maxScroll;
-
-      log("📜 SCROLLING: current = $currentScroll, max = $maxScroll, progress = $newProgress");
 
       setState(() {
         scrollProgress =
@@ -54,16 +61,24 @@ class _ReadingPageState extends State<ReadingPage> {
   }
 
   Future<void> _fetchChapter(Chapter chapter) async {
-    log("📖 Fetching chapter content for: ${chapter.name}");
-
     setState(() => isLoading = true);
-    ChapterDetails details =
-        await scrapeRaNobesChapterDetails(chapter.url, chapter.publicationId);
+    if (widget.publication.type == ContentType.Novel) {
+      ChapterDetails details =
+          await scrapeRaNobesChapterDetails(chapter.url, chapter.publicationId);
 
-    setState(() {
-      loadedChapters = [details]; // Replace current chapter data
-      isLoading = false;
-    });
+      setState(() {
+        loadedChapters = [details]; // Replace current chapter data
+        isLoading = false;
+      });
+    } else {
+      ChapterDetails details =
+          await scrapeComickChapterDetails(chapter.url, chapter.publicationId);
+
+      setState(() {
+        loadedChapters = [details]; // Replace current chapter data
+        isLoading = false;
+      });
+    }
   }
 
   void _toggleUI() {
@@ -99,36 +114,31 @@ class _ReadingPageState extends State<ReadingPage> {
             child: Center(
               child: isLoading
                   ? CircularProgressIndicator()
-                  : ListView.builder(
-                      controller: _scrollController,
-                      padding: EdgeInsets.all(16.0),
-                      itemCount: loadedChapters.length,
-                      itemBuilder: (context, index) {
-                        return Padding(
-                          padding: EdgeInsets.only(bottom: 32.0),
-                          child: Text(
-                            loadedChapters[index].pages.first.text ??
-                                "No content available",
-                            style: TextStyle(fontSize: 18, color: Colors.white),
-                          ),
-                        );
-                      },
-                    ),
+                  : widget.publication.type == ContentType.Novel
+                      ? NovelReader(
+                          loadedChapters: loadedChapters,
+                          scrollController: _scrollController,
+                        )
+                      : ComicReader(
+                          loadedChapters: loadedChapters,
+                          scrollController: _scrollController,
+                        ),
             ),
           ),
 
           // ✅ UI Components
           ReadingScrollIndicator(scrollProgress: scrollProgress),
           ReadingTopBar(
-              title: widget.chapters[currentChapterIndex].name,
-              isVisible: isUIVisible),
+            title: widget.chapters[currentChapterIndex].name,
+            isVisible: isUIVisible,
+          ),
           ReadingBottomBar(
             isVisible: isUIVisible,
             onPrevious: _loadPreviousChapter,
             onNext: _loadNextChapter,
             hasPrevious: currentChapterIndex + 1 < widget.chapters.length,
             hasNext: currentChapterIndex - 1 >= 0,
-            scrollController: _scrollController, // ✅ Pass scrollController
+            scrollController: _scrollController,
             chapter: widget.chapters[currentChapterIndex],
           ),
         ],
