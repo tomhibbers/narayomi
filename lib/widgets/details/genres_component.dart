@@ -16,7 +16,7 @@ class GenresComponent extends StatelessWidget {
                 scrollDirection: Axis.horizontal,
                 physics: BouncingScrollPhysics(), // ✅ Adds smooth drag effect
                 child: Row(
-                  children: genres.map((genre) => _buildGenreChip(genre)).toList(),
+                  children: genres.map((genre) => _buildGenreChip(genre, context)).toList(),
                 ),
               ),
             ),
@@ -24,12 +24,12 @@ class GenresComponent extends StatelessWidget {
         : SizedBox(); // ✅ Don't show anything if no genres
   }
 
-  Widget _buildGenreChip(String genre) {
+  Widget _buildGenreChip(String genre, BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(right: 8.0),
       child: Chip(
-        label: Text(genre, style: TextStyle(fontSize: 12, color: Colors.white)),
-        backgroundColor: Colors.grey[800], // ✅ Dark theme friendly
+        label: Text(genre, style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onBackground)),
+        backgroundColor: Theme.of(context).colorScheme.background, // ✅ Dark theme friendly
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
     );

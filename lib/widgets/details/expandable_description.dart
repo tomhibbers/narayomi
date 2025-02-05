@@ -29,7 +29,7 @@ class _ExpandableDescriptionState extends State<ExpandableDescription> {
                       padding: EdgeInsets.only(bottom: 16), // ✅ Extra padding when expanded
                       child: Text(
                         widget.description,
-                        style: TextStyle(fontSize: 14, color: Colors.white),
+                        style: TextStyle(fontSize: 14, color: Theme.of(context).colorScheme.onBackground),
                       ),
                     )
                   : ShaderMask(
@@ -38,10 +38,10 @@ class _ExpandableDescriptionState extends State<ExpandableDescription> {
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            Colors.white,
-                            Colors.white,
-                            Colors.white.withOpacity(0.7),
-                            Colors.white.withOpacity(0.3),
+                            Theme.of(context).colorScheme.onBackground,
+                            Theme.of(context).colorScheme.onBackground,
+                            Theme.of(context).colorScheme.onBackground.withOpacity(0.7),
+                            Theme.of(context).colorScheme.onBackground.withOpacity(0.3),
                             Colors.transparent, // ✅ Fade effect at bottom
                           ],
                           stops: [0.0, 0.7, 0.85, 0.95, 1.0],
@@ -52,7 +52,7 @@ class _ExpandableDescriptionState extends State<ExpandableDescription> {
                         widget.description,
                         maxLines: maxLines,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: 14, color: Colors.white),
+                        style: TextStyle(fontSize: 14, color: Theme.of(context).colorScheme.onBackground),
                       ),
                     ),
             ),
@@ -69,7 +69,7 @@ class _ExpandableDescriptionState extends State<ExpandableDescription> {
               color: Colors.transparent,
               child: Icon(
                 isExpanded ? Icons.expand_less : Icons.expand_more,
-                color: Colors.cyan, // ✅ Easier to see on text
+                color: Theme.of(context).colorScheme.secondary, // ✅ Easier to see on text
               ),
             ),
           ),

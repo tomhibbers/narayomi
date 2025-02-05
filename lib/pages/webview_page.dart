@@ -89,7 +89,7 @@ class _WebViewPageState extends State<WebViewPage> with SingleTickerProviderStat
                     padding: EdgeInsets.only(right: 40),
                     child: Text(
                       currentUrl,
-                      style: TextStyle(fontSize: 12, color: Colors.white70),
+                      style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onBackground),
                     ),
                   ),
                 ],

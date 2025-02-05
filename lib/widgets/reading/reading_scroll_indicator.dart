@@ -17,7 +17,7 @@ class ReadingScrollIndicator extends StatelessWidget {
         width: 5,
         height: 40,
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.7), // ✅ Ensure visibility
+          color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7), // ✅ Ensure visibility
           borderRadius: BorderRadius.circular(5),
         ),
       ),

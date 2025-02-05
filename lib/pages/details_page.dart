@@ -93,12 +93,12 @@ class _DetailsPageState extends State<DetailsPage> {
                                   fit: BoxFit.cover,
                                 )
                               : Container(
-                                  color: Colors.grey[800]), // ✅ Placeholder
+                                  color: Theme.of(context).colorScheme.background), // ✅ Placeholder
                           Positioned.fill(
                             child: BackdropFilter(
                               filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                               child: Container(
-                                  color: Colors.black.withOpacity(0.3)),
+                                  color: Theme.of(context).colorScheme.background.withOpacity(0.3)),
                             ),
                           ),
                           if (publication !=

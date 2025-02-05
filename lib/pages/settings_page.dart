@@ -1,51 +1,48 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../main.dart'; // Import to access `MyApp.setTheme`
+import 'package:provider/provider.dart';
+import '../providers/theme_provider.dart';
+import '../themes/app_themes.dart';
 
-class SettingsPage extends StatefulWidget {
+class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
   @override
-  _SettingsPageState createState() => _SettingsPageState();
-}
-
-class _SettingsPageState extends State<SettingsPage> {
-  bool _isDarkMode = true; // ✅ Default value to prevent LateInitializationError
-
-  @override
-  void initState() {
-    super.initState();
-    _loadTheme(); // Load saved theme preference
-  }
-
-  Future<void> _loadTheme() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _isDarkMode = prefs.getBool('isDarkMode') ?? true; // ✅ Fallback to default
-    });
-  }
-
-  Future<void> _toggleTheme(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('isDarkMode', value);
-    setState(() {
-      _isDarkMode = value;
-    });
-
-    MyApp.setTheme(context, value); // Notify MyApp to update theme
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(16.0),
-      children: [
-        SwitchListTile(
-          title: const Text("Dark Mode"),
-          value: _isDarkMode, // ✅ No more LateInitializationError
-          onChanged: _toggleTheme,
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Settings"),
+        // backgroundColor: Theme.of(context).colorScheme.background,
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text("Select Theme:"),
+            const SizedBox(height: 10),
+            DropdownButton<String>(
+              value: themeProvider.themeName,
+              dropdownColor: Theme.of(context).colorScheme.background,
+              icon: Icon(Icons.palette,
+                  color: Theme.of(context).colorScheme.secondary),
+              items: AppThemes.themeMap.keys.map((themeKey) {
+                return DropdownMenuItem(
+                  value: themeKey,
+                  child: Text(themeKey,
+                      style: TextStyle(
+                          color: Theme.of(context).colorScheme.primary)),
+                );
+              }).toList(),
+              onChanged: (themeKey) {
+                if (themeKey != null) {
+                  themeProvider.setTheme(themeKey); // 🔥 Apply the new theme
+                }
+              },
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }

@@ -67,8 +67,7 @@ class _LibraryPageState extends State<LibraryPage>
   Widget _buildLibraryList(List<Publication> publications) {
     if (publications.isEmpty) {
       return Center(
-          child: Text("No items in your library.",
-              style: TextStyle(color: Colors.white)));
+          child: Text("No items in your library."));
     }
 
     return ListView.builder(

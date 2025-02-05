@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:narayomi/models/content_type.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:narayomi/providers/theme_provider.dart';
+import 'package:provider/provider.dart';
 import 'pages/library_page.dart';
 import 'pages/updates_page.dart';
 import 'pages/browse_page.dart';
@@ -29,21 +30,16 @@ void main() async {
   await Hive.openBox<Chapter>('chapters');
   await Hive.openBox<ChapterPage>('chapter_pages');
 
-  // ✅ Load Theme Preference
-  final prefs = await SharedPreferences.getInstance();
-  final isDarkMode = prefs.getBool('isDarkMode') ?? true;
-
-  runApp(MyApp(isDarkMode: isDarkMode));
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => ThemeProvider(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatefulWidget {
-  final bool isDarkMode;
-  const MyApp({super.key, required this.isDarkMode});
-
-  static void setTheme(BuildContext context, bool isDark) async {
-    final _MyAppState? state = context.findAncestorStateOfType<_MyAppState>();
-    state?.toggleTheme(isDark);
-  }
+  const MyApp({super.key});
 
   @override
   _MyAppState createState() => _MyAppState();
@@ -56,7 +52,6 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    _isDarkMode = widget.isDarkMode;
   }
 
   void _onItemTapped(int index) {
@@ -65,47 +60,11 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
-  Future<void> toggleTheme(bool isDark) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('isDarkMode', isDark);
-    setState(() {
-      _isDarkMode = isDark;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context); // ✅ Get theme
     return MaterialApp(
-      theme: _isDarkMode
-          ? ThemeData.dark().copyWith(
-              scaffoldBackgroundColor: Colors.grey[850],
-              appBarTheme: const AppBarTheme(backgroundColor: Colors.black87),
-              bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-                backgroundColor: Colors.black87,
-                selectedItemColor: Colors.cyan,
-                unselectedItemColor: Colors.white70,
-              ),
-              switchTheme: SwitchThemeData(
-                thumbColor: WidgetStateProperty.all(
-                    Colors.cyan), // ✅ Switch button color
-                trackColor: WidgetStateProperty.all(
-                    Colors.cyan.withAlpha(128)), // ✅ Semi-transparent track
-                overlayColor: WidgetStateProperty.all(
-                    Colors.white60), // ✅ Restores the subtle border effect
-              ),
-            )
-          : ThemeData.light().copyWith(
-              scaffoldBackgroundColor: Colors.grey[100],
-              appBarTheme: AppBarTheme(
-                  backgroundColor:
-                      Colors.grey[300]), // ✅ Softer gray for app bar
-              bottomNavigationBarTheme: BottomNavigationBarThemeData(
-                backgroundColor:
-                    Colors.grey[300], // ✅ Softer gray for bottom nav
-                selectedItemColor: Colors.teal,
-                unselectedItemColor: Colors.black54,
-              ),
-            ),
+      theme: themeProvider.currentTheme, // ✅ Apply the theme
       home: Scaffold(
         body: [
           LibraryPage(),

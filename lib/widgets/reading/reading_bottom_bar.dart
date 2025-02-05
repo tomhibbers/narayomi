@@ -30,14 +30,14 @@ class ReadingBottomBar extends StatelessWidget {
       left: 0,
       right: 0,
       child: Container(
-        color: Colors.black.withOpacity(0.7),
+        color: Theme.of(context).colorScheme.background.withOpacity(0.7),
         padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             IconButton(
               icon: Icon(Icons.arrow_back,
-                  color: hasPrevious ? Colors.white : Colors.grey),
+                  color: hasPrevious ? Theme.of(context).colorScheme.onBackground : Theme.of(context).colorScheme.onBackground),
               onPressed: hasPrevious
                   ? () {
                       onPrevious();
@@ -46,11 +46,11 @@ class ReadingBottomBar extends StatelessWidget {
                   : null,
             ),
             IconButton(
-              icon: Icon(Icons.list, color: Colors.white),
+              icon: Icon(Icons.list, color: Theme.of(context).colorScheme.onBackground),
               onPressed: () {}, // Placeholder for chapter list
             ),
             IconButton(
-              icon: Icon(Icons.public_outlined, color: Colors.white),
+              icon: Icon(Icons.public_outlined, color: Theme.of(context).colorScheme.onBackground),
               onPressed: () {
                 if (chapter.url.isNotEmpty) {
                   Navigator.push(
@@ -70,12 +70,12 @@ class ReadingBottomBar extends StatelessWidget {
               }, // ✅ Open WebView with chapter URL
             ),
             IconButton(
-              icon: Icon(Icons.settings, color: Colors.white),
+              icon: Icon(Icons.settings, color: Theme.of(context).colorScheme.onBackground),
               onPressed: () {}, // Placeholder for reader settings
             ),
             IconButton(
               icon: Icon(Icons.arrow_forward,
-                  color: hasNext ? Colors.white : Colors.grey),
+                  color: hasNext ? Theme.of(context).colorScheme.onBackground : Theme.of(context).colorScheme.onBackground),
               onPressed: hasNext
                   ? () {
                       onNext();

@@ -22,7 +22,7 @@ class NovelReader extends StatelessWidget {
           padding: EdgeInsets.only(bottom: 32.0),
           child: Text(
             loadedChapters[index].pages.first.text ?? "No content available",
-            style: TextStyle(fontSize: 18, color: Colors.white),
+            style: TextStyle(fontSize: 18, color: Theme.of(context).colorScheme.onBackground),
           ),
         );
       },

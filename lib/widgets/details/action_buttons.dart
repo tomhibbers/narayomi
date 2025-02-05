@@ -125,12 +125,12 @@ class _ActionButtonsState extends State<ActionButtons> {
             Icon(icon,
                 color: isSelected
                     ? accentColor
-                    : Colors.grey), // ✅ Uses theme color when selected
+                    : Theme.of(context).colorScheme.onBackground), // ✅ Uses theme color when selected
             SizedBox(height: 5),
             Text(
               label,
               style: TextStyle(
-                  color: isSelected ? accentColor : Colors.grey, fontSize: 12),
+                  color: isSelected ? accentColor : Theme.of(context).colorScheme.onBackground, fontSize: 12),
             ),
           ],
         ),

@@ -18,17 +18,17 @@ class ReadingTopBar extends StatelessWidget {
       child: Container(
         height: kToolbarHeight + statusBarHeight, // ✅ AppBar + Status Bar
         padding: EdgeInsets.only(top: statusBarHeight), // ✅ Prevent text from touching status icons
-        color: Colors.black.withOpacity(0.85),
+        color: Theme.of(context).colorScheme.background.withOpacity(0.85),
         child: Row(
           children: [
             IconButton(
-              icon: Icon(Icons.arrow_back, color: Colors.white),
+              icon: Icon(Icons.arrow_back, color: Theme.of(context).colorScheme.onBackground),
               onPressed: () => Navigator.pop(context),
             ),
             Expanded(
               child: Text(
                 title,
-                style: TextStyle(color: Colors.white, fontSize: 18),
+                style: TextStyle(color: Theme.of(context).colorScheme.onBackground, fontSize: 18),
                 overflow: TextOverflow.ellipsis,
               ),
             ),

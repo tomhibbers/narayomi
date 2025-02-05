@@ -30,17 +30,17 @@ class PublicationInfo extends StatelessWidget {
             children: [
               Text(
                 publication.title,
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onBackground),
               ),
               SizedBox(height: 8),
               Row(
                 children: [
-                  Icon(Icons.person, size: 18, color: Colors.white70),
+                  Icon(Icons.person, size: 18, color: Theme.of(context).colorScheme.onBackground),
                   SizedBox(width: 6),
                   Expanded(
                     child: Text(
                       publication.author ?? "Unknown Author",
-                      style: TextStyle(fontSize: 16, color: Colors.white),
+                      style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onBackground),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -49,11 +49,11 @@ class PublicationInfo extends StatelessWidget {
               SizedBox(height: 8),
               Row(
                 children: [
-                  Icon(Icons.check_circle_outline, size: 18, color: Colors.white70),
+                  Icon(Icons.check_circle_outline, size: 18, color: Theme.of(context).colorScheme.onBackground),
                   SizedBox(width: 6),
                   Text(
                     publication.status ?? "Unknown Status",
-                    style: TextStyle(fontSize: 16, color: Colors.white),
+                    style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onBackground),
                   ),
                 ],
               ),
