@@ -40,7 +40,6 @@ class ChaptersComponent extends StatelessWidget {
               trailing:
                   Icon(Icons.arrow_forward_ios, size: 16, color: Theme.of(context).colorScheme.onBackground),
               onTap: () {
-                log("🔄 Navigating to ReadingPage with: ${publication.title}, Type: ${publication.type}");
                 Navigator.push(
                   context,
                   MaterialPageRoute(

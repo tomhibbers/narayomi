@@ -5,7 +5,8 @@ part 'chapter.g.dart';
 @HiveType(typeId: 2)
 class Chapter extends HiveObject {
   @HiveField(0) int id;
-  @HiveField(1) int publicationId;
+  @HiveField(1) int publicationId; // ✅ Keep the old int field for now
+  @HiveField(13) String? normalizedPublicationId; // ✅ New field to store the String version
   @HiveField(2) String url;
   @HiveField(3) String name;
   @HiveField(4) DateTime? dateUpload;
@@ -21,6 +22,7 @@ class Chapter extends HiveObject {
   Chapter({
     required this.id,
     required this.publicationId,
+    this.normalizedPublicationId, // ✅ New field
     required this.url,
     required this.name,
     this.dateUpload,

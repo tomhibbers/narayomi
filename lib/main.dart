@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart'
+    as riverpod; // ✅ Import Riverpod
 import 'package:narayomi/models/content_type.dart';
 import 'package:narayomi/providers/theme_provider.dart';
 import 'package:provider/provider.dart';
@@ -16,7 +18,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
 
-  // ✅ Register All Adapters
+  // ✅ Register All Hive Adapters
   Hive.registerAdapter(CatalogAdapter());
   Hive.registerAdapter(PublicationAdapter());
   Hive.registerAdapter(ChapterAdapter());
@@ -25,15 +27,17 @@ void main() async {
 
   // ✅ Open All Hive Boxes
   await Hive.openBox<Catalog>('catalogs');
-  await Hive.openBox<Publication>(
-      'library_v3'); // 🔥 Keep 'library_v2' instead of 'publications'
+  await Hive.openBox<Publication>('library_v3');
   await Hive.openBox<Chapter>('chapters');
   await Hive.openBox<ChapterPage>('chapter_pages');
 
   runApp(
-    ChangeNotifierProvider(
-      create: (context) => ThemeProvider(),
-      child: const MyApp(),
+    riverpod.ProviderScope(
+      // ✅ Wrap the app with Riverpod
+      child: ChangeNotifierProvider(
+        create: (context) => ThemeProvider(),
+        child: const MyApp(),
+      ),
     ),
   );
 }
@@ -62,9 +66,10 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context); // ✅ Get theme
+    final themeProvider =
+        Provider.of<ThemeProvider>(context); // ✅ ThemeProvider still works
     return MaterialApp(
-      theme: themeProvider.currentTheme, // ✅ Apply the theme
+      theme: themeProvider.currentTheme,
       home: Scaffold(
         body: [
           LibraryPage(),

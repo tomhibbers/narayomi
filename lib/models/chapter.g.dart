@@ -19,6 +19,7 @@ class ChapterAdapter extends TypeAdapter<Chapter> {
     return Chapter(
       id: fields[0] as int,
       publicationId: fields[1] as int,
+      normalizedPublicationId: fields[13] as String?,
       url: fields[2] as String,
       name: fields[3] as String,
       dateUpload: fields[4] as DateTime?,
@@ -36,11 +37,13 @@ class ChapterAdapter extends TypeAdapter<Chapter> {
   @override
   void write(BinaryWriter writer, Chapter obj) {
     writer
-      ..writeByte(13)
+      ..writeByte(14)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
       ..write(obj.publicationId)
+      ..writeByte(13)
+      ..write(obj.normalizedPublicationId)
       ..writeByte(2)
       ..write(obj.url)
       ..writeByte(3)

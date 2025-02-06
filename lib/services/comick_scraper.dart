@@ -24,7 +24,6 @@ Future<List<Publication>> scrapeComickSearch(String query) async {
       onLoadStop: (controller, url) async {
         if (_isDisposed) return; // ✅ Skip if already disposed
         try {
-          log("✅ Waiting for JavaScript execution...");
           await Future.delayed(
               Duration(seconds: 3)); // ✅ Wait for JavaScript execution
 
@@ -85,8 +84,6 @@ Future<List<Publication>> scrapeComickSearch(String query) async {
               }
             }
 
-            log("📜 Loaded ${results.length} publications...");
-
             // ✅ Scroll down to trigger lazy loading
             await controller.evaluateJavascript(source: """
             window.scrollBy(0, document.body.scrollHeight);
@@ -127,7 +124,6 @@ Future<PublicationDetails> scrapeComickPublicationDetails(String url) async {
         if (_isDisposed) return;
 
         try {
-          log("✅ Waiting for JavaScript execution...");
           await Future.delayed(Duration(seconds: 2)); // Shorter wait
 
           int previousCount = 0;
@@ -151,7 +147,6 @@ Future<PublicationDetails> scrapeComickPublicationDetails(String url) async {
             }
 
             previousCount = chapterElements.length;
-            log("🔄 Loaded Chapters: $previousCount");
 
             // ✅ Break early if a lot of chapters already loaded
             if (previousCount > 50)
@@ -317,7 +312,6 @@ Future<ChapterDetails> scrapeComickChapterDetails(
         if (_isDisposed) return;
 
         try {
-          log("✅ Waiting for JavaScript execution...");
           await Future.delayed(Duration(seconds: 2));
 
           int retries = 0;
@@ -352,13 +346,10 @@ Future<ChapterDetails> scrapeComickChapterDetails(
                   imageUrl: imageUrl,
                   text: "page$pageNo",
                 ));
-                log("🖼️ Page Extracted: $imageUrl");
                 pageNo++;
                 newPages++; // ✅ Count new pages added
               }
             }
-
-            log("🔄 Loaded Unique Pages: ${uniqueUrls.length}");
 
             // ✅ Stop scrolling if no new pages were found
             if (newPages == 0) {
@@ -374,8 +365,6 @@ Future<ChapterDetails> scrapeComickChapterDetails(
 
             await Future.delayed(Duration(seconds: 1));
           }
-
-          log("✅ Done scraping, completing future with ${pages.length} pages");
         } catch (e) {
           log("❌ Error during scraping: $e");
         } finally {
@@ -383,8 +372,6 @@ Future<ChapterDetails> scrapeComickChapterDetails(
             _isDisposed = true;
             controller.dispose();
           }
-
-          log("✅ Final Extracted Pages: ${pages.length}");
 
           if (!completer.isCompleted) {
             completer.complete(ChapterDetails(chapter: chapter, pages: pages));

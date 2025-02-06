@@ -58,7 +58,6 @@ Future<List<Publication>> scrapeRaNobesSearch(String query) async {
       Document document = html_parser.parse(htmlString);
       List<Element> items =
           document.getElementsByClassName('block story shortstory');
-      log("✅ Found ${items.length} search results");
 
       for (var item in items) {
         String? title = item.querySelector('.title')?.text.trim();

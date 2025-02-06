@@ -1,50 +1,40 @@
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart'; // ✅ Import Riverpod
 import 'package:narayomi/models/content_type.dart';
-import 'package:narayomi/models/publication.dart';
-import 'package:narayomi/widgets/common/publication_card.dart';
+import 'package:narayomi/providers/publication_provider.dart';
 import 'package:narayomi/widgets/common/publication_list.dart';
-import 'dart:developer';
 
-class LibraryPage extends StatefulWidget {
+class LibraryPage extends ConsumerStatefulWidget {
+  // ✅ Change this
   const LibraryPage({super.key});
 
   @override
   _LibraryPageState createState() => _LibraryPageState();
 }
 
-class _LibraryPageState extends State<LibraryPage>
-    with SingleTickerProviderStateMixin {
+class _LibraryPageState extends ConsumerState<LibraryPage> // ✅ Change this
+    with
+        SingleTickerProviderStateMixin {
   bool isGridView = true; // ✅ Default to Grid View
   late TabController _tabController;
-  List<Publication> novels = [];
-  List<Publication> comics = [];
 
   @override
   void initState() {
     _tabController =
         TabController(length: 2, vsync: this); // ✅ Initialize FIRST
     super.initState(); // ✅ Then call super.initState()
-    _loadLibrary(); // ✅ Load data after initialization
-  }
-
-  void _loadLibrary() async {
-    var box = await Hive.openBox<Publication>('library_v3');
-
-    List<Publication> allPublications = box.values.toList();
-
-    setState(() {
-      novels = allPublications
-          .where((p) => p.type == ContentType.Novel)
-          .toList(); // Light Novels
-      comics = allPublications
-          .where((p) => p.type == ContentType.Comic)
-          .toList(); // Graphic Novels
-    });
   }
 
   @override
   Widget build(BuildContext context) {
+    final publications = ref.watch(publicationProvider); // ✅ Use ref now
+
+    // ✅ Filter novels & comics dynamically
+    final novels =
+        publications.where((p) => p.type == ContentType.Novel).toList();
+    final comics =
+        publications.where((p) => p.type == ContentType.Comic).toList();
+
     return Scaffold(
       appBar: AppBar(
         title: Text("Library"),
