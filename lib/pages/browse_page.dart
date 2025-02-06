@@ -79,28 +79,43 @@ class _BrowsePageState extends State<BrowsePage>
       ),
       body: Column(
         children: [
+          SizedBox(height: 20), // 🔼 Adjusted to match spacing below
           Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.symmetric(horizontal: 12.0),
             child: TextField(
               controller: _controller,
               decoration: InputDecoration(
                 hintText: "Search...",
-                suffixIcon: IconButton(
-                  icon: Icon(Icons.search),
-                  onPressed: _search,
+                prefixIcon: Icon(Icons.search, color: Colors.grey),
+                filled: true,
+                fillColor: Colors.grey[900],
+                contentPadding:
+                    EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(25),
+                  borderSide: BorderSide.none,
                 ),
               ),
+              style: TextStyle(color: Colors.white),
               onSubmitted: (value) => _search(),
             ),
           ),
-          if (isLoading) Center(child: CircularProgressIndicator()),
+          SizedBox(height: 20), // 🔼 Now equal to the space above
           Expanded(
-            child: TabBarView(
-              controller: _tabController,
+            child: Stack(
               children: [
-                _buildView(lightNovelResults), // ✅ Shows Light Novel results
-                _buildView(
-                    graphicNovelResults), // ✅ Shows Graphic Novel results
+                Padding(
+                  padding:
+                      const EdgeInsets.only(top: 20), // ✅ Consistent spacing
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _buildView(lightNovelResults),
+                      _buildView(graphicNovelResults),
+                    ],
+                  ),
+                ),
+                if (isLoading) Center(child: CircularProgressIndicator()),
               ],
             ),
           ),

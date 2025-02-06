@@ -9,17 +9,33 @@ import 'package:narayomi/widgets/details/expandable_description.dart';
 import 'package:narayomi/widgets/details/action_buttons.dart';
 import 'package:narayomi/widgets/details/chapters_component.dart';
 
-class DetailsPage extends ConsumerWidget {
-  final Publication publication; // ✅ Pass full publication now
+class DetailsPage extends ConsumerStatefulWidget {
+  final Publication publication;
 
   const DetailsPage({super.key, required this.publication});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final details = ref.watch(publicationDetailsProvider(publication));
+  ConsumerState<DetailsPage> createState() => _DetailsPageState();
+}
+
+class _DetailsPageState extends ConsumerState<DetailsPage> {
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      ref
+          .read(publicationDetailsProvider.notifier)
+          .loadPublicationDetails(widget.publication);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final details =
+        ref.watch(publicationDetailsProvider)[widget.publication.id];
 
     return Scaffold(
-      body: details.isLoading
+      body: details == null || details.isLoading
           ? Center(
               child:
                   CircularProgressIndicator()) // ✅ Show loading indicator while fetching
@@ -29,8 +45,8 @@ class DetailsPage extends ConsumerWidget {
                   publication: details.publication,
                   scrollOffset: 0,
                   onRefresh: () => ref
-                      .read(publicationDetailsProvider(publication).notifier)
-                      .refreshPublication(),
+                      .read(publicationDetailsProvider.notifier)
+                      .refreshPublication(details.publication),
                 ),
                 SliverToBoxAdapter(
                   child: Padding(

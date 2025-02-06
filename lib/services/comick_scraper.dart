@@ -69,9 +69,14 @@ Future<List<Publication>> scrapeComickSearch(String query) async {
                   ?.attributes['src'];
 
               if (title != null && url != null && thumbnailUrl != null) {
+                String publicationId = url.split('/').last;
+                String normalizedId = publicationId
+                    .toLowerCase()
+                    .replaceAll('-', '_'); // ✅ Standardized
+
                 results.add(
                   Publication(
-                    id: url.split('/').last,
+                    id: publicationId,
                     title: title,
                     type: ContentType.Comic,
                     url: 'https://comick.io${url}',
@@ -221,9 +226,14 @@ Future<PublicationDetails> scrapeComickPublicationDetails(String url) async {
           // ✅ Clean the extracted text
           status = status?.replaceAll(RegExp(r'[^a-zA-Z\s]'), '').trim();
 
+          String publicationId = currentUrl.split('/').last;
+          String normalizedPublicationId = publicationId
+              .toLowerCase()
+              .replaceAll('-', '_'); // ✅ Standardized format
+
           // ✅ Create publication object
           publication = Publication(
-            id: currentUrl.split('/').last,
+            id: publicationId,
             title: title,
             author: author,
             description: description,
@@ -263,8 +273,11 @@ Future<PublicationDetails> scrapeComickPublicationDetails(String url) async {
             // ✅ Add to Chapter List
             if (chapterUrl != null) {
               chapters.add(Chapter(
-                id: chapters.length + 1, // Temporary ID
-                publicationId: publication!.id.hashCode, // Ensures unique ID
+                id: "$publicationId-$chapterTitle"
+                    .hashCode, // ✅ Unique chapter ID
+                publicationId: -1, // ❌ Dummy value, ignored
+                normalizedPublicationId:
+                    normalizedPublicationId, // ✅ Only use this for lookups
                 name: chapterTitle,
                 url: "https://comick.io$chapterUrl", // Append base URL
                 dateUpload: null, // ✅ Date extraction can be added later

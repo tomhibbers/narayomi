@@ -9,11 +9,9 @@ import '../services/ranobes_scraper.dart';
 import 'dart:developer' as dev;
 
 /// ✅ Provider for Cached Publication Details & Chapters
-final publicationDetailsProvider = StateNotifierProvider.family<
-    PublicationDetailsNotifier,
-    PublicationDetailsState,
-    Publication>((ref, pub) {
-  return PublicationDetailsNotifier(pub);
+final publicationDetailsProvider = StateNotifierProvider<
+    PublicationDetailsNotifier, Map<String, PublicationDetailsState>>((ref) {
+  return PublicationDetailsNotifier();
 });
 
 /// ✅ State Model to Hold Cached Details
@@ -22,131 +20,115 @@ class PublicationDetailsState {
   final List<Chapter> chapters;
   final bool isLoading;
 
-  PublicationDetailsState(
-      {required this.publication,
-      this.chapters = const [],
-      this.isLoading = true});
+  PublicationDetailsState({
+    required this.publication,
+    this.chapters = const [],
+    this.isLoading = true,
+  });
 }
 
-/// ✅ Manages Cached Publication Details & Chapters
+/// ✅ Manages Cached Publication Details for Multiple Publications
 class PublicationDetailsNotifier
-    extends StateNotifier<PublicationDetailsState> {
-  final Publication publication;
+    extends StateNotifier<Map<String, PublicationDetailsState>> {
+  PublicationDetailsNotifier() : super({});
 
-  PublicationDetailsNotifier(this.publication)
-      : super(PublicationDetailsState(publication: publication)) {
-    loadPublicationDetails(); // ✅ Load only if it exists in Hive
-  }
-
-  /// ✅ Load from Hive Only if Already in Library
-  Future<void> loadPublicationDetails() async {
+  /// ✅ Load publication details & chapters (stores them per publication)
+  /// ✅ Load publication details & chapters (only using normalizedPublicationId)
+  Future<void> loadPublicationDetails(Publication publication) async {
     final pubBox = await Hive.openBox<Publication>('library_v3');
     final chapterBox = await Hive.openBox<Chapter>('chapters');
 
-    final normalizedId = publication.id.trim().toLowerCase();
+    final normalizedId =
+        publication.id.trim().toLowerCase(); // ✅ Standardize ID
+    var cachedPublication = pubBox.get(normalizedId);
 
-    var cachedPublication = pubBox.get(normalizedId); // ✅ Corrected Hive lookup
-
-    /// ✅ Fetch stored chapters correctly
     var storedChapters = chapterBox.values
-        .where(
-          (c) =>
-              c.normalizedPublicationId?.trim().toLowerCase() == normalizedId,
-        )
+        .where((c) =>
+            c.normalizedPublicationId ==
+            normalizedId) // ✅ Only using normalizedPublicationId
+        .toList();
+
+    dev.log("📌 Loading details for ${publication.title}", name: "DEBUG");
+    dev.log("📌 Chapters Found: ${storedChapters.length}", name: "DEBUG");
+
+    // ✅ Preserve existing state while updating only the relevant publication
+    state = {
+      ...state,
+      normalizedId: PublicationDetailsState(
+        publication: cachedPublication ?? publication,
+        chapters: storedChapters,
+        isLoading: false,
+      ),
+    };
+  }
+
+  /// ✅ Fetch Fresh Chapters & Save to Hive (stop using publicationId)
+  Future<void> refreshPublication(Publication publication,
+      {bool skipCache = false}) async {
+    final normalizedId =
+        publication.id.trim().toLowerCase(); // ✅ Standardized ID
+    final pubBox = await Hive.openBox<Publication>('library_v3');
+    final chapterBox = await Hive.openBox<Chapter>('chapters');
+
+    // ✅ Preserve all existing chapters before fetching new ones
+    final existingChapters = chapterBox.values
+        .where((c) =>
+            c.normalizedPublicationId == normalizedId) // ✅ Updated filtering
         .toList();
 
     dev.log(
-        "📌 Loaded ${storedChapters.length} cached chapters for: ${publication.title}",
-        name: "CHAPTER_CACHE");
+        "🔍 Before Refresh | Chapters in Hive (${publication.title}): ${existingChapters.length}",
+        name: "DEBUG");
 
-    /// ✅ If chapters exist, load them into state **before refreshing**
-    if (cachedPublication != null && storedChapters.isNotEmpty) {
-      state = PublicationDetailsState(
-          publication: cachedPublication,
-          chapters: storedChapters,
-          isLoading: false);
-      return; // ✅ Stop execution here if we found cached data
-    }
-
-    /// ✅ If no cached data, fetch fresh details
-    dev.log("📌 No cached chapters found, fetching fresh details...",
-        name: "CHAPTER_UPDATE");
-    await refreshPublication(skipCache: false);
-  }
-
-  /// ✅ Fetch Fresh Chapters (Only Add Missing Ones)
-  Future<void> refreshPublication({bool skipCache = false}) async {
-    final normalizedId = state.publication.id.trim().toLowerCase();
-
-    state = PublicationDetailsState(
-        publication: state.publication,
-        chapters: state.chapters,
-        isLoading: true);
+    // ✅ Preserve previous state while marking only the current publication as loading
+    state = {
+      ...state,
+      normalizedId: PublicationDetailsState(
+        publication: state[normalizedId]?.publication ?? publication,
+        chapters: existingChapters,
+        isLoading: true,
+      ),
+    };
 
     PublicationDetails details;
-    if (state.publication.type == ContentType.Novel) {
-      details =
-          await scrapeRaNobesPublicationDetails(state.publication.url ?? "");
+    if (publication.type == ContentType.Novel) {
+      details = await scrapeRaNobesPublicationDetails(publication.url ?? "");
     } else {
-      details =
-          await scrapeComickPublicationDetails(state.publication.url ?? "");
+      details = await scrapeComickPublicationDetails(publication.url ?? "");
     }
 
-    final pubBox = await Hive.openBox<Publication>('library_v3');
-    final chapterBox = await Hive.openBox<Chapter>('chapters');
-
-    if (!skipCache) {
+    final isInLibrary = pubBox.containsKey(normalizedId);
+    if (isInLibrary && !skipCache) {
       await pubBox.put(normalizedId, details.publication);
     }
 
-    // ✅ Fetch all stored chapters for this publication
-    final storedChapterIds = chapterBox.values
-        .where((c) => c.normalizedPublicationId == normalizedId)
-        .map((c) => c.id)
-        .toSet();
-
-    dev.log("📌 Stored Chapter IDs for $normalizedId: $storedChapterIds",
-        name: "CHAPTER_CACHE");
-
-    // ✅ Compare by `id` instead of relying on `containsKey`
-    List<Chapter> newChapters = details.chapters
-        .where(
-          (newChap) => !storedChapterIds
-              .contains(newChap.id), // ✅ Check against stored IDs
-        )
-        .toList();
-
-    dev.log(
-        "📌 New Chapters to be saved for ${state.publication.title}: ${newChapters.map((c) => c.id).toList()}",
-        name: "CHAPTER_SAVE");
-
-    for (var chapter in newChapters) {
+    // ✅ Save fetched chapters (ensuring `normalizedPublicationId` is set)
+    for (var chapter in details.chapters) {
       chapter.normalizedPublicationId =
-          normalizedId; // ✅ Store correct publication ID
-      await chapterBox.put(
-          chapter.id, chapter); // ✅ Store new chapters correctly
+          normalizedId; // ✅ Assign normalized ID properly
+      chapter.publicationId =
+          -1; // ❌ Dummy value, ensuring publicationId is ignored
+      await chapterBox.put(chapter.id, chapter);
     }
 
-    dev.log(
-        "✅ Saved ${newChapters.length} new chapters for: ${state.publication.title}",
-        name: "CHAPTER_SAVE");
-
-    // ✅ Always reload chapters from Hive to update the UI correctly
+    // ✅ Reload stored chapters from Hive using only normalizedPublicationId
     final storedChapters = chapterBox.values
-        .where(
-          (c) => c.normalizedPublicationId == normalizedId,
-        )
+        .where((c) =>
+            c.normalizedPublicationId == normalizedId) // ✅ Ensure consistency
         .toList();
 
-    state = PublicationDetailsState(
-      publication: details.publication,
-      chapters:
-          storedChapters, // ✅ Load stored chapters instead of relying on `state`
-      isLoading: false,
-    );
-
     dev.log(
-        "✅ Updated state for publication: ${state.publication.title} (Total Chapters: ${state.chapters.length})",
-        name: "CHAPTER_UPDATE");
+        "🔍 After Refresh | Chapters in Hive (${publication.title}): ${storedChapters.length}",
+        name: "DEBUG");
+
+    // ✅ Preserve all publications' state while updating the current one
+    state = {
+      ...state,
+      normalizedId: PublicationDetailsState(
+        publication: details.publication,
+        chapters: storedChapters,
+        isLoading: false,
+      ),
+    };
   }
 }

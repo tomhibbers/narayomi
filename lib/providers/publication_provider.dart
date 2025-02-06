@@ -17,20 +17,25 @@ class PublicationNotifier extends StateNotifier<List<Publication>> {
   /// ✅ Load publications from Hive (Only runs once)
   Future<void> loadPublications() async {
     final box = await Hive.openBox<Publication>('library_v3');
-    state = box.values.toList(); // Store in memory
+    state = box.values.toList();
   }
 
   /// ✅ Add a publication to the library (updates memory first, then Hive)
   Future<void> addPublication(Publication publication) async {
     final box = await Hive.openBox<Publication>('library_v3');
-    await box.put(publication.id, publication);
-    state = [...state, publication]; // Update cached state
+    final normalizedId = publication.id.trim().toLowerCase(); // ✅ Normalize ID
+    await box.put(normalizedId, publication);
+
+    // ✅ Avoid duplicate entries
+    state = [...state.where((p) => p.id != normalizedId), publication];
   }
 
   /// ✅ Remove a publication from the library (updates memory first, then Hive)
   Future<void> removePublication(String id) async {
     final box = await Hive.openBox<Publication>('library_v3');
-    await box.delete(id);
-    state = state.where((pub) => pub.id != id).toList(); // Update state
+    final normalizedId = id.trim().toLowerCase(); // ✅ Normalize ID
+    await box.delete(normalizedId);
+
+    state = state.where((pub) => pub.id != normalizedId).toList();
   }
 }

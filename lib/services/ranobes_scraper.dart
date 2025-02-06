@@ -76,9 +76,14 @@ Future<List<Publication>> scrapeRaNobesSearch(String query) async {
 
         // Ensure non-null values before adding to the results list
         if (title != null && url != null && imageUrl != null) {
+          String publicationId = url.split('/').last;
+          String normalizedId = publicationId
+              .toLowerCase()
+              .replaceAll('-', '_'); // ✅ Standardized
+
           results.add(
             Publication(
-              id: url.split('/').last,
+              id: publicationId,
               title: title,
               type: ContentType.Novel,
               url: url,
@@ -193,8 +198,13 @@ Future<PublicationDetails> scrapeRaNobesPublicationDetails(String url) async {
         }
       }
 
+      String publicationId = url.toString().split('/').last;
+      String normalizedPublicationId = publicationId
+          .toLowerCase()
+          .replaceAll('-', '_'); // Standardized format
+
       publication = Publication(
-          id: url.toString().split('/').last,
+          id: publicationId,
           title: title,
           author: author,
           status: status,
@@ -220,8 +230,10 @@ Future<PublicationDetails> scrapeRaNobesPublicationDetails(String url) async {
 
         if (chapterTitle != null && chapterUrl != null) {
           chapters.add(Chapter(
-            id: chapters.length + 1, // Temporary ID
-            publicationId: publication!.id.hashCode, // Temporary unique ID
+            id: "$publicationId-$chapterTitle".hashCode, // ✅ Unique chapter ID
+            publicationId: -1, // ❌ Dummy value, ignored
+            normalizedPublicationId:
+                normalizedPublicationId, // ✅ Use this for lookups
             name: chapterTitle,
             url: chapterUrl,
             dateUpload: dateUploaded,
