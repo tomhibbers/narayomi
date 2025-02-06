@@ -62,8 +62,8 @@ class _BrowsePageState extends State<BrowsePage>
         bottom: TabBar(
           controller: _tabController,
           tabs: [
-            Tab(text: "Light Novels"),
-            Tab(text: "Graphic Novels"),
+            Tab(text: "Novels"),
+            Tab(text: "Comics"),
           ],
         ),
         actions: [
