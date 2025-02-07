@@ -8,11 +8,13 @@ import 'package:narayomi/pages/webview_page.dart';
 class ActionButtons extends StatefulWidget {
   final Publication publication;
   final VoidCallback onTrack;
+  final VoidCallback onLibraryChange;
 
   const ActionButtons({
     super.key,
     required this.publication,
     required this.onTrack,
+    required this.onLibraryChange,
   });
 
   @override
@@ -51,6 +53,7 @@ class _ActionButtonsState extends State<ActionButtons> {
     setState(() {
       isInLibrary = !isInLibrary;
     });
+    widget.onLibraryChange();
   }
 
   @override
@@ -125,12 +128,17 @@ class _ActionButtonsState extends State<ActionButtons> {
             Icon(icon,
                 color: isSelected
                     ? accentColor
-                    : Theme.of(context).colorScheme.onBackground), // ✅ Uses theme color when selected
+                    : Theme.of(context)
+                        .colorScheme
+                        .onBackground), // ✅ Uses theme color when selected
             SizedBox(height: 5),
             Text(
               label,
               style: TextStyle(
-                  color: isSelected ? accentColor : Theme.of(context).colorScheme.onBackground, fontSize: 12),
+                  color: isSelected
+                      ? accentColor
+                      : Theme.of(context).colorScheme.onBackground,
+                  fontSize: 12),
             ),
           ],
         ),

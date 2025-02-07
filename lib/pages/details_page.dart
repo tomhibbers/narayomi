@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:narayomi/models/publication.dart';
 import 'package:narayomi/providers/publication_details_provider.dart';
+import 'package:narayomi/providers/publication_provider.dart';
 import 'package:narayomi/widgets/details/details_header.dart';
 import 'package:narayomi/widgets/details/genres_component.dart';
 import 'package:narayomi/widgets/details/publication_info.dart';
@@ -27,6 +28,10 @@ class _DetailsPageState extends ConsumerState<DetailsPage> {
           .read(publicationDetailsProvider.notifier)
           .loadPublicationDetails(widget.publication);
     });
+  }
+
+  void refreshLibrary() {
+    ref.invalidate(publicationProvider); // ✅ Force the library list to refresh
   }
 
   @override
@@ -60,6 +65,7 @@ class _DetailsPageState extends ConsumerState<DetailsPage> {
                           onTrack: () {
                             // TODO: Implement tracking
                           },
+                          onLibraryChange: refreshLibrary,
                         ),
                         SizedBox(height: 16),
                         ExpandableDescription(
