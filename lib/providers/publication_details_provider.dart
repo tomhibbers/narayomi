@@ -97,10 +97,8 @@ class PublicationDetailsNotifier
       details = await scrapeComickPublicationDetails(publication.url ?? "");
     }
 
-    final isInLibrary = pubBox.containsKey(normalizedId);
-    if (isInLibrary && !skipCache) {
-      await pubBox.put(normalizedId, details.publication);
-    }
+    // ✅ Always save fetched details to Hive (even if not in library)
+    await pubBox.put(normalizedId, details.publication);
 
     // ✅ Save fetched chapters (ensuring `normalizedPublicationId` is set)
     for (var chapter in details.chapters) {

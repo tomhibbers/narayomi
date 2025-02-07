@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hive/hive.dart';
 import 'package:narayomi/models/publication.dart';
 import 'package:narayomi/providers/publication_details_provider.dart';
 import 'package:narayomi/providers/publication_provider.dart';
@@ -23,10 +24,21 @@ class _DetailsPageState extends ConsumerState<DetailsPage> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() {
-      ref
-          .read(publicationDetailsProvider.notifier)
-          .loadPublicationDetails(widget.publication);
+    Future.microtask(() async {
+      final pubBox = await Hive.openBox<Publication>('library_v3');
+      final normalizedId = widget.publication.id.trim().toLowerCase();
+
+      if (!pubBox.containsKey(normalizedId)) {
+        // ✅ If not in library, fetch full details
+        ref
+            .read(publicationDetailsProvider.notifier)
+            .refreshPublication(widget.publication);
+      } else {
+        // ✅ Load from cache if available
+        ref
+            .read(publicationDetailsProvider.notifier)
+            .loadPublicationDetails(widget.publication);
+      }
     });
   }
 
