@@ -74,9 +74,6 @@ class _DetailsPageState extends ConsumerState<DetailsPage> {
                         SizedBox(height: 16),
                         ActionButtons(
                           publication: details.publication,
-                          onTrack: () {
-                            // TODO: Implement tracking
-                          },
                           onLibraryChange: refreshLibrary,
                         ),
                         SizedBox(height: 16),

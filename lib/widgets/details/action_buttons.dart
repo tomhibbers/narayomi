@@ -4,16 +4,15 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:hive/hive.dart';
 import 'package:narayomi/models/publication.dart';
 import 'package:narayomi/pages/webview_page.dart';
+import 'package:narayomi/widgets/details/tracking_bottom_drawer.dart';
 
 class ActionButtons extends StatefulWidget {
   final Publication publication;
-  final VoidCallback onTrack;
   final VoidCallback onLibraryChange;
 
   const ActionButtons({
     super.key,
     required this.publication,
-    required this.onTrack,
     required this.onLibraryChange,
   });
 
@@ -23,6 +22,15 @@ class ActionButtons extends StatefulWidget {
 
 class _ActionButtonsState extends State<ActionButtons> {
   bool isInLibrary = false;
+
+  void _openTrackingDrawer() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) =>
+          TrackingBottomDrawer(publicationId: widget.publication.id),
+    );
+  }
 
   @override
   void initState() {
@@ -77,7 +85,7 @@ class _ActionButtonsState extends State<ActionButtons> {
             accentColor: accentColor,
           ),
           _buildButton(
-            onTap: widget.onTrack,
+            onTap: _openTrackingDrawer, // ✅ Open the tracking drawer
             icon: Icons.sync_outlined,
             label: "Tracking",
             isSelected: false,
