@@ -1,12 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive/hive.dart';
+import 'package:narayomi/models/chapter.dart';
 import 'package:narayomi/models/content_type.dart';
-import '../models/publication.dart';
-import '../models/chapter.dart';
-import '../models/publication_details.dart';
-import '../services/comick_scraper.dart';
-import '../services/ranobes_scraper.dart';
 import 'dart:developer' as dev;
+
+import 'package:narayomi/models/publication.dart';
+import 'package:narayomi/models/publication_details.dart';
+import 'package:narayomi/services/comick_service.dart';
+import 'package:narayomi/services/ranobes_service.dart';
 
 /// ✅ Provider for Cached Publication Details & Chapters
 final publicationDetailsProvider = StateNotifierProvider<
@@ -92,9 +93,9 @@ class PublicationDetailsNotifier
 
     PublicationDetails details;
     if (publication.type == ContentType.Novel) {
-      details = await scrapeRaNobesPublicationDetails(publication.url ?? "");
+      details = await raNobesPublicationDetails(publication.url ?? "");
     } else {
-      details = await scrapeComickPublicationDetails(publication.url ?? "");
+      details = await comickPublicationDetails(publication.url ?? "");
     }
 
     // ✅ Always save fetched details to Hive (even if not in library)

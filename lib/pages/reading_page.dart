@@ -4,8 +4,8 @@ import 'package:narayomi/models/chapter.dart';
 import 'package:narayomi/models/chapter_details.dart';
 import 'package:narayomi/models/content_type.dart';
 import 'package:narayomi/models/publication.dart';
-import 'package:narayomi/services/comick_scraper.dart';
-import 'package:narayomi/services/ranobes_scraper.dart';
+import 'package:narayomi/services/comick_service.dart';
+import 'package:narayomi/services/ranobes_service.dart';
 import 'package:narayomi/widgets/reading/reading_top_bar.dart';
 import 'package:narayomi/widgets/reading/reading_bottom_bar.dart';
 import 'package:narayomi/widgets/reading/reading_scroll_indicator.dart';
@@ -64,7 +64,7 @@ class _ReadingPageState extends State<ReadingPage> {
     setState(() => isLoading = true);
     if (widget.publication.type == ContentType.Novel) {
       ChapterDetails details =
-          await scrapeRaNobesChapterDetails(chapter.url, chapter.publicationId);
+          await raNobesChapterDetails(chapter.url, chapter.publicationId);
 
       setState(() {
         loadedChapters = [details]; // Replace current chapter data
@@ -72,7 +72,7 @@ class _ReadingPageState extends State<ReadingPage> {
       });
     } else {
       ChapterDetails details =
-          await scrapeComickChapterDetails(chapter.url, chapter.publicationId);
+          await comickChapterDetails(chapter.url, chapter.publicationId);
 
       setState(() {
         loadedChapters = [details]; // Replace current chapter data

@@ -12,7 +12,7 @@ import '../models/content_type.dart';
 
 String htmlString = ""; // ✅ Store for debugging
 
-Future<List<Publication>> scrapeComickSearch(String query) async {
+Future<List<Publication>> comickSearch(String query) async {
   Completer<List<Publication>> completer = Completer();
   List<Publication> results = [];
   bool _isDisposed = false; // ✅ Prevents multiple disposals
@@ -116,7 +116,7 @@ Future<List<Publication>> scrapeComickSearch(String query) async {
   return completer.future;
 }
 
-Future<PublicationDetails> scrapeComickPublicationDetails(String url) async {
+Future<PublicationDetails> comickPublicationDetails(String url) async {
   Completer<PublicationDetails> completer = Completer();
   Publication? publication;
   List<Chapter> chapters = [];
@@ -302,7 +302,7 @@ Future<PublicationDetails> scrapeComickPublicationDetails(String url) async {
   return completer.future;
 }
 
-Future<ChapterDetails> scrapeComickChapterDetails(
+Future<ChapterDetails> comickChapterDetails(
     String url, int publicationId) async {
   Completer<ChapterDetails> completer = Completer();
 

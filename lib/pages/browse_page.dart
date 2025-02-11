@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:narayomi/models/publication.dart';
+import 'package:narayomi/services/comick_service.dart';
+import 'package:narayomi/services/ranobes_service.dart';
 import 'package:narayomi/widgets/common/publication_list.dart'; // ✅ Import helper file
-import '../models/publication.dart';
-import '../services/ranobes_scraper.dart';
-import '../services/comick_scraper.dart';
 
 class BrowsePage extends StatefulWidget {
   @override
@@ -36,13 +36,13 @@ class _BrowsePageState extends State<BrowsePage>
 
     if (_tabController.index == 0) {
       // ✅ Light Novels Search
-      List<Publication> results = await scrapeRaNobesSearch(query);
+      List<Publication> results = await raNobesSearch(query);
       setState(() {
         lightNovelResults = results;
       });
     } else {
       // ✅ Graphic Novels Search
-      List<Publication> results = await scrapeComickSearch(query);
+      List<Publication> results = await comickSearch(query);
       setState(() {
         graphicNovelResults = results;
       });

@@ -43,7 +43,7 @@ DateTime parseRelativeTime(String relativeTime) {
 
 String htmlString = "";
 
-Future<List<Publication>> scrapeRaNobesSearch(String query) async {
+Future<List<Publication>> raNobesSearch(String query) async {
   Completer<List<Publication>> completer = Completer();
   List<Publication> results = [];
 
@@ -105,7 +105,7 @@ Future<List<Publication>> scrapeRaNobesSearch(String query) async {
   return completer.future;
 }
 
-Future<PublicationDetails> scrapeRaNobesPublicationDetails(String url) async {
+Future<PublicationDetails> raNobesPublicationDetails(String url) async {
   Completer<PublicationDetails> completer = Completer();
   Publication? publication;
   List<Chapter> chapters = [];
@@ -251,7 +251,7 @@ Future<PublicationDetails> scrapeRaNobesPublicationDetails(String url) async {
   return completer.future;
 }
 
-Future<ChapterDetails> scrapeRaNobesChapterDetails(
+Future<ChapterDetails> raNobesChapterDetails(
     String url, int publicationId) async {
   Completer<ChapterDetails> completer = Completer();
   Chapter? chapter;
