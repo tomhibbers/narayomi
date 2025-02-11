@@ -20,4 +20,8 @@ class SecureStorage {
   static Future<void> clearCredentials() async {
     await _storage.deleteAll();
   }
+
+  static Future<String?> getSessionToken() async {
+    return await _storage.read(key: "mu_token");
+  }
 }

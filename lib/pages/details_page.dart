@@ -6,7 +6,6 @@ import 'package:narayomi/providers/publication_details_provider.dart';
 import 'package:narayomi/providers/publication_provider.dart';
 import 'package:narayomi/widgets/details/details_header.dart';
 import 'package:narayomi/widgets/details/genres_component.dart';
-import 'package:narayomi/widgets/details/publication_info.dart';
 import 'package:narayomi/widgets/details/expandable_description.dart';
 import 'package:narayomi/widgets/details/action_buttons.dart';
 import 'package:narayomi/widgets/details/chapters_component.dart';

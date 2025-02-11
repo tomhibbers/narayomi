@@ -1,10 +1,13 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
+import 'package:narayomi/models/publication.dart';
 import 'package:narayomi/widgets/details/tracking_search_state.dart';
 import 'package:narayomi/widgets/details/tracking_tracked_state.dart';
+import 'package:narayomi/services/mangaupdates_service.dart';
+import 'package:narayomi/models/api/mangaupdates_series.dart';
 
 class TrackingBottomDrawer extends StatefulWidget {
-  final String publicationId;
+  final Publication publicationId;
 
   TrackingBottomDrawer({required this.publicationId});
 
@@ -20,15 +23,40 @@ class _TrackingBottomDrawerState extends State<TrackingBottomDrawer> {
   String? _trackedTitle;
   List<Map<String, String>> _searchResults = [];
   String? _selectedResultId;
+  String _searchQuery = "";
 
-  Future<void> _searchMangaUpdates() async {
-    log("Searching for: mock query...");
-    setState(() {
-      _searchResults = [
-        {"id": "1", "title": "One Piece", "summary": "Pirates and adventures."},
-        {"id": "2", "title": "Naruto", "summary": "Ninjas and battles."},
-      ];
-    });
+  Future<void> _searchMangaUpdates(String query) async {
+    if (query.isEmpty) {
+      log("Query is empty, skipping search.");
+      return;
+    }
+
+    final service = MangaUpdatesService();
+    log("Searching for: $query");
+
+    try {
+      List<MangaUpdatesSeries> results = await service.searchPublication(query, type: widget.publicationId.type);
+
+      setState(() {
+        _searchResults = results.map((series) {
+          return {
+            "id": series.seriesId,
+            "title": series.title,
+            "summary": series.description.isNotEmpty
+                ? series.description
+                : "No description available",
+            "imageUrl": series.imageUrl,
+          };
+        }).toList();
+      });
+
+      log("Found ${results.length} results.");
+    } catch (error) {
+      log("Error during search: $error");
+      setState(() {
+        _searchResults = [];
+      });
+    }
   }
 
   void _selectResult(String id) {

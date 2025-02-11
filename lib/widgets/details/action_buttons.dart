@@ -28,7 +28,7 @@ class _ActionButtonsState extends State<ActionButtons> {
       context: context,
       isScrollControlled: true,
       builder: (context) =>
-          TrackingBottomDrawer(publicationId: widget.publication.id),
+          TrackingBottomDrawer(publicationId: widget.publication),
     );
   }
 
