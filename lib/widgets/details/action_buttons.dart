@@ -4,6 +4,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:hive/hive.dart';
 import 'package:narayomi/models/publication.dart';
 import 'package:narayomi/pages/webview_page.dart';
+import 'package:narayomi/services/mangaupdates_service.dart';
 import 'package:narayomi/widgets/details/tracking_bottom_drawer.dart';
 
 class ActionButtons extends StatefulWidget {
