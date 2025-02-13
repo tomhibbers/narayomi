@@ -2,7 +2,7 @@ import 'package:hive/hive.dart';
 
 part 'tracked_series.g.dart'; // Generated with build_runner
 
-@HiveType(typeId: 0)
+@HiveType(typeId: 5)
 class TrackedSeries extends HiveObject {
   @HiveField(0)
   final int id; // MangaUpdates series ID

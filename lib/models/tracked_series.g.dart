@@ -8,7 +8,7 @@ part of 'tracked_series.dart';
 
 class TrackedSeriesAdapter extends TypeAdapter<TrackedSeries> {
   @override
-  final int typeId = 0;
+  final int typeId = 5;
 
   @override
   TrackedSeries read(BinaryReader reader) {

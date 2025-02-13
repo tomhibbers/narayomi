@@ -1,9 +1,14 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive/hive.dart';
 import 'package:narayomi/models/publication.dart';
+import 'package:narayomi/models/tracked_series.dart';
 import 'package:narayomi/providers/publication_details_provider.dart';
 import 'package:narayomi/providers/publication_provider.dart';
+import 'package:narayomi/services/mangaupdates_service.dart';
+import 'package:narayomi/utils/tracked_series_database.dart';
 import 'package:narayomi/widgets/details/details_header.dart';
 import 'package:narayomi/widgets/details/genres_component.dart';
 import 'package:narayomi/widgets/details/expandable_description.dart';
@@ -20,9 +25,15 @@ class DetailsPage extends ConsumerStatefulWidget {
 }
 
 class _DetailsPageState extends ConsumerState<DetailsPage> {
+  bool _isTracked = false;
+  TrackedSeries? _trackedSeries;
+
   @override
   void initState() {
     super.initState();
+    _fetchTrackingStatus();
+    _syncTrackingInfo();
+
     Future.microtask(() async {
       final pubBox = await Hive.openBox<Publication>('library_v3');
       final normalizedId = widget.publication.id.trim().toLowerCase();
@@ -43,6 +54,56 @@ class _DetailsPageState extends ConsumerState<DetailsPage> {
 
   void refreshLibrary() {
     ref.invalidate(publicationProvider); // ✅ Force the library list to refresh
+  }
+
+  Future<void> _fetchTrackingStatus() async {
+    final trackedSeries =
+        await TrackedSeriesDatabase.getTrackedSeries(widget.publication.id);
+    if (trackedSeries != null) {
+      setState(() {
+        _isTracked = true;
+        _trackedSeries = trackedSeries;
+      });
+      log("Tracking found for publication ${widget.publication.id}");
+    } else {
+      log("No tracking found for publication ${widget.publication.id}");
+    }
+  }
+
+  Future<void> _syncTrackingInfo() async {
+    if (_trackedSeries == null) {
+      log("No tracked series available. Skipping sync.");
+      return;
+    }
+
+    log("Syncing tracking info for seriesId ${_trackedSeries!.id}");
+    final latestTrackingInfo =
+        await MangaUpdatesService().getTrackingDetails(_trackedSeries!.id);
+
+    if (latestTrackingInfo != null) {
+      final updatedSeries = TrackedSeries(
+        id: latestTrackingInfo.seriesId,
+        publicationId: widget.publication.id,
+        listId: latestTrackingInfo.listId,
+        currentChapter: latestTrackingInfo.chapter,
+        score: latestTrackingInfo.priority ?? 0,
+      );
+
+      await TrackedSeriesDatabase.addOrUpdateTrackedSeries(updatedSeries);
+      setState(() {
+        _trackedSeries = updatedSeries;
+        _isTracked = true;
+      });
+
+      log("Tracking info synced successfully for ${updatedSeries.publicationId}");
+    } else {
+      log("No updated tracking info found.");
+    }
+  }
+
+  void trackingChanged() async {
+    log("Tracking status changed. Refreshing...");
+    await _fetchTrackingStatus();
   }
 
   @override
@@ -74,6 +135,9 @@ class _DetailsPageState extends ConsumerState<DetailsPage> {
                         ActionButtons(
                           publication: details.publication,
                           onLibraryChange: refreshLibrary,
+                          isTracked: _isTracked,
+                          trackedSeries: _trackedSeries,
+                          onTrackingChange: trackingChanged,
                         ),
                         SizedBox(height: 16),
                         ExpandableDescription(

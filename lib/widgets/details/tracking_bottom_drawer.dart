@@ -1,15 +1,19 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:narayomi/models/publication.dart';
+import 'package:narayomi/models/tracked_series.dart';
+import 'package:narayomi/utils/tracked_series_database.dart';
 import 'package:narayomi/widgets/details/tracking_search_state.dart';
 import 'package:narayomi/widgets/details/tracking_tracked_state.dart';
 import 'package:narayomi/services/mangaupdates_service.dart';
 import 'package:narayomi/models/api/mangaupdates_series.dart';
 
 class TrackingBottomDrawer extends StatefulWidget {
-  final Publication publicationId;
+  final Publication publication;
+  final VoidCallback onTrackingChange;
 
-  TrackingBottomDrawer({required this.publicationId});
+  TrackingBottomDrawer(
+      {required this.publication, required this.onTrackingChange});
 
   @override
   _TrackingBottomDrawerState createState() => _TrackingBottomDrawerState();
@@ -27,11 +31,20 @@ class _TrackingBottomDrawerState extends State<TrackingBottomDrawer> {
   String? _selectedResultId;
   String _searchQuery = "";
   Map<int, String> _listMapping = {};
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _fetchListMapping();
+    _initialize();
+  }
+
+  Future<void> _initialize() async {
+    await _fetchListMapping(); // Ensure this completes first
+    await _checkLocalTracking(); // Now check for local tracking
+    setState(() {
+      _isLoading = false;
+    });
   }
 
   Future<void> _fetchListMapping() async {
@@ -51,7 +64,7 @@ class _TrackingBottomDrawerState extends State<TrackingBottomDrawer> {
 
     try {
       List<MangaUpdatesSeries> results = await _service.searchPublication(query,
-          type: widget.publicationId.type);
+          type: widget.publication.type);
 
       setState(() {
         _searchResults = results.map((series) {
@@ -89,6 +102,12 @@ class _TrackingBottomDrawerState extends State<TrackingBottomDrawer> {
         .key;
   }
 
+  Future<void> _addTrackingEntry(TrackedSeries newSeries) async {
+    log("Adding tracking entry for ${newSeries.publicationId}");
+    await TrackedSeriesDatabase.addOrUpdateTrackedSeries(newSeries);
+    widget.onTrackingChange(); // Notify DetailsPage to refresh its state
+  }
+
   void _trackSelectedResult() async {
     final selectedResult = _searchResults
         .firstWhere((result) => result['id'] == _selectedResultId);
@@ -111,6 +130,19 @@ class _TrackingBottomDrawerState extends State<TrackingBottomDrawer> {
           _selectedResultId = null;
         });
         log("Successfully tracked series: ${trackingInfo.title}");
+
+        final newTrackedSeries = TrackedSeries(
+          id: seriesId,
+          publicationId: widget.publication.id,
+          listId: trackingInfo.listId,
+          currentChapter: trackingInfo.chapter,
+          score: trackingInfo.priority ?? 0,
+        );
+
+        await _addTrackingEntry(newTrackedSeries);
+        log("Successfully added tracking for seriesId $seriesId");
+        // 🔥 Notify DetailsPage to refresh its state
+        widget.onTrackingChange();
       } else {
         log("Failed to track series.");
       }
@@ -128,7 +160,6 @@ class _TrackingBottomDrawerState extends State<TrackingBottomDrawer> {
     try {
       final success = await _service.removeFromTracking(_trackedSeriesId!);
       if (success) {
-        log("Removed tracking for series $_trackedSeriesId.");
         setState(() {
           _isTracked = false;
           _trackedSeriesId = null;
@@ -137,12 +168,37 @@ class _TrackingBottomDrawerState extends State<TrackingBottomDrawer> {
           _score = 0;
           _trackedTitle = null;
         });
+        log("Removed tracking for series $_trackedSeriesId.");
+
+        // 🔥 Notify DetailsPage to refresh its state
+        widget.onTrackingChange();
       } else {
         log("Failed to remove tracking for series $_trackedSeriesId.");
       }
     } catch (error) {
       log("Error removing tracking: $error");
     }
+  }
+
+  Future<void> _checkLocalTracking() async {
+    final trackedSeries =
+        await TrackedSeriesDatabase.getTrackedSeries(widget.publication.id);
+    if (trackedSeries != null) {
+      setState(() {
+        _isTracked = true;
+        _trackedSeriesId = trackedSeries.id;
+        _listStatus = _listMapping[trackedSeries.listId] ?? "Unknown";
+        _currentChapter = trackedSeries.currentChapter;
+        _score = trackedSeries.score;
+        _trackedTitle = "Local Tracking"; // Adjust this as needed
+      });
+      log("Found local tracking for publication ${widget.publication.id}");
+    } else {
+      log("No local tracking found for publication ${widget.publication.id}");
+    }
+    setState(() {
+      _isLoading = false; // Mark loading as complete
+    });
   }
 
   @override
@@ -154,32 +210,35 @@ class _TrackingBottomDrawerState extends State<TrackingBottomDrawer> {
         color: Theme.of(context).colorScheme.background,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      child: SingleChildScrollView(
-        child: _isTracked
-            ? TrackingTrackedState(
-                trackedTitle: _trackedTitle ?? "",
-                listStatus: _listStatus,
-                currentChapter: _currentChapter,
-                score: _score,
-                onListStatusChanged: (value) =>
-                    setState(() => _listStatus = value),
-                onCurrentChapterChanged: (value) =>
-                    setState(() => _currentChapter = value),
-                onScoreChanged: (value) => setState(() => _score = value),
-                onRemoveTracking: _removeTracking,
-                onShowOptions: _showOptionsMenu,
-                listMapping: _listMapping,
-                service: _service,
-                seriesId: _trackedSeriesId ?? 0,
-              )
-            : TrackingSearchState(
-                searchResults: _searchResults,
-                selectedResultId: _selectedResultId,
-                onSelectResult: _selectResult,
-                onSearch: _searchMangaUpdates,
-                onTrack: _trackSelectedResult,
-              ),
-      ),
+      child: _isLoading
+          ? Center(
+              child: CircularProgressIndicator()) // Spinner inside the drawer
+          : SingleChildScrollView(
+              child: _isTracked
+                  ? TrackingTrackedState(
+                      trackedTitle: _trackedTitle ?? "",
+                      listStatus: _listStatus,
+                      currentChapter: _currentChapter,
+                      score: _score,
+                      onListStatusChanged: (value) =>
+                          setState(() => _listStatus = value),
+                      onCurrentChapterChanged: (value) =>
+                          setState(() => _currentChapter = value),
+                      onScoreChanged: (value) => setState(() => _score = value),
+                      onRemoveTracking: _removeTracking,
+                      onShowOptions: _showOptionsMenu,
+                      listMapping: _listMapping,
+                      service: _service,
+                      seriesId: _trackedSeriesId ?? 0,
+                    )
+                  : TrackingSearchState(
+                      searchResults: _searchResults,
+                      selectedResultId: _selectedResultId,
+                      onSelectResult: _selectResult,
+                      onSearch: _searchMangaUpdates,
+                      onTrack: _trackSelectedResult,
+                    ),
+            ),
     );
   }
 

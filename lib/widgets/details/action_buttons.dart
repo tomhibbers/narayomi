@@ -3,18 +3,24 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:hive/hive.dart';
 import 'package:narayomi/models/publication.dart';
+import 'package:narayomi/models/tracked_series.dart';
 import 'package:narayomi/pages/webview_page.dart';
-import 'package:narayomi/services/mangaupdates_service.dart';
 import 'package:narayomi/widgets/details/tracking_bottom_drawer.dart';
 
 class ActionButtons extends StatefulWidget {
   final Publication publication;
   final VoidCallback onLibraryChange;
+  final bool isTracked;
+  final TrackedSeries? trackedSeries;
+  final VoidCallback onTrackingChange;
 
   const ActionButtons({
     super.key,
     required this.publication,
     required this.onLibraryChange,
+    required this.onTrackingChange,
+    required this.isTracked,
+    required this.trackedSeries,
   });
 
   @override
@@ -28,8 +34,13 @@ class _ActionButtonsState extends State<ActionButtons> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (context) =>
-          TrackingBottomDrawer(publicationId: widget.publication),
+      builder: (context) => FractionallySizedBox(
+        heightFactor: 0.9, // Constrain height to 90% of the screen
+        child: TrackingBottomDrawer(
+          publication: widget.publication,
+          onTrackingChange: widget.onTrackingChange,
+        ),
+      ),
     );
   }
 
@@ -86,10 +97,10 @@ class _ActionButtonsState extends State<ActionButtons> {
             accentColor: accentColor,
           ),
           _buildButton(
-            onTap: _openTrackingDrawer, // ✅ Open the tracking drawer
-            icon: Icons.sync_outlined,
-            label: "Tracking",
-            isSelected: false,
+            onTap: _openTrackingDrawer,
+            icon: widget.isTracked ? Icons.check_circle : Icons.sync_outlined,
+            label: widget.isTracked ? "Tracked" : "Track",
+            isSelected: widget.isTracked,
             accentColor: accentColor,
           ),
           _buildButton(
