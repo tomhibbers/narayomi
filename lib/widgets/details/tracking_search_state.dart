@@ -51,7 +51,7 @@ class _TrackingSearchState extends State<TrackingSearchState> {
         if (widget.selectedResultId != null)
           ElevatedButton(
             onPressed: widget.onTrack,
-            child: Text("Track"),
+            child: Text("Add Tracking"),
           ),
       ],
     );

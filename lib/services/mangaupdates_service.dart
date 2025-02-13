@@ -63,7 +63,12 @@ class MangaUpdatesService {
   Future<MangaUpdatesListSeries?> getTrackingDetails(int seriesId) async {
     try {
       final trackingInfo = await _api.fetchSeriesTrackingDetails(seriesId);
-      log("Fetched list details for series $seriesId.");
+      if (trackingInfo != null) {
+        final listMapping = await getCachedTrackingLists();
+        final listTitle = listMapping[trackingInfo.listId] ?? 'Unknown List';
+        log("Series $seriesId is on the list: $listTitle");
+        trackingInfo.listType = listTitle; // Update the listType with the title
+      }
       return trackingInfo;
     } catch (error) {
       log("Error fetching tracking details: $error");

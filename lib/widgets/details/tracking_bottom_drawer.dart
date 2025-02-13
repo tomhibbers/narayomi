@@ -16,7 +16,9 @@ class TrackingBottomDrawer extends StatefulWidget {
 }
 
 class _TrackingBottomDrawerState extends State<TrackingBottomDrawer> {
+  final MangaUpdatesService _service = MangaUpdatesService();
   bool _isTracked = false;
+  int? _trackedSeriesId;
   String _listStatus = "Reading";
   int _currentChapter = 1;
   int _score = 0;
@@ -24,6 +26,20 @@ class _TrackingBottomDrawerState extends State<TrackingBottomDrawer> {
   List<Map<String, String>> _searchResults = [];
   String? _selectedResultId;
   String _searchQuery = "";
+  Map<int, String> _listMapping = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchListMapping();
+  }
+
+  Future<void> _fetchListMapping() async {
+    final listMapping = await _service.getCachedTrackingLists();
+    setState(() {
+      _listMapping = listMapping;
+    });
+  }
 
   Future<void> _searchMangaUpdates(String query) async {
     if (query.isEmpty) {
@@ -31,11 +47,11 @@ class _TrackingBottomDrawerState extends State<TrackingBottomDrawer> {
       return;
     }
 
-    final service = MangaUpdatesService();
     log("Searching for: $query");
 
     try {
-      List<MangaUpdatesSeries> results = await service.searchPublication(query, type: widget.publicationId.type);
+      List<MangaUpdatesSeries> results = await _service.searchPublication(query,
+          type: widget.publicationId.type);
 
       setState(() {
         _searchResults = results.map((series) {
@@ -66,27 +82,67 @@ class _TrackingBottomDrawerState extends State<TrackingBottomDrawer> {
     log("Selected result: $id");
   }
 
-  void _trackSelectedResult() {
-    final selectedResult = _searchResults
-        .firstWhere((result) => result['id'] == _selectedResultId);
-    setState(() {
-      _isTracked = true;
-      _trackedTitle = selectedResult['title'];
-      _searchResults.clear();
-      _selectedResultId = null;
-    });
-    log("Tracking publication: $_trackedTitle");
+  int _findListIdForStatus(String listStatus) {
+    return _listMapping.entries
+        .firstWhere((entry) => entry.value == listStatus,
+            orElse: () => MapEntry(0, "Unknown"))
+        .key;
   }
 
-  void _removeTracking() {
-    log("Removed tracking.");
-    setState(() {
-      _isTracked = false;
-      _listStatus = "Reading";
-      _currentChapter = 1;
-      _score = 0;
-      _trackedTitle = null;
-    });
+  void _trackSelectedResult() async {
+    final selectedResult = _searchResults
+        .firstWhere((result) => result['id'] == _selectedResultId);
+    final int seriesId =
+        int.parse(selectedResult['id']!); // Extract the seriesId
+
+    try {
+      final trackingInfo = await _service.checkAndTrackSeries(
+          seriesId, _findListIdForStatus("Reading List"));
+
+      if (trackingInfo != null) {
+        setState(() {
+          _isTracked = true;
+          _trackedSeriesId = seriesId; // Store the tracked series ID
+          _trackedTitle = trackingInfo.title;
+          _listStatus = trackingInfo.listType ?? "Unknown";
+          _currentChapter = trackingInfo.chapter;
+          _score = trackingInfo.priority ?? 0;
+          _searchResults.clear();
+          _selectedResultId = null;
+        });
+        log("Successfully tracked series: ${trackingInfo.title}");
+      } else {
+        log("Failed to track series.");
+      }
+    } catch (error) {
+      log("Error tracking series: $error");
+    }
+  }
+
+  void _removeTracking() async {
+    if (_trackedSeriesId == null) {
+      log("No tracked series to remove.");
+      return;
+    }
+
+    try {
+      final success = await _service.removeFromTracking(_trackedSeriesId!);
+      if (success) {
+        log("Removed tracking for series $_trackedSeriesId.");
+        setState(() {
+          _isTracked = false;
+          _trackedSeriesId = null;
+          _listStatus = "Reading";
+          _currentChapter = 0;
+          _score = 0;
+          _trackedTitle = null;
+        });
+      } else {
+        log("Failed to remove tracking for series $_trackedSeriesId.");
+      }
+    } catch (error) {
+      log("Error removing tracking: $error");
+    }
   }
 
   @override
@@ -112,6 +168,9 @@ class _TrackingBottomDrawerState extends State<TrackingBottomDrawer> {
                 onScoreChanged: (value) => setState(() => _score = value),
                 onRemoveTracking: _removeTracking,
                 onShowOptions: _showOptionsMenu,
+                listMapping: _listMapping,
+                service: _service,
+                seriesId: _trackedSeriesId ?? 0,
               )
             : TrackingSearchState(
                 searchResults: _searchResults,

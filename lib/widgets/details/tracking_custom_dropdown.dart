@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 
 class TrackingCustomDropdown extends StatelessWidget {
   final String label;
-  final String currentValue;
-  final List<String> items;
-  final ValueChanged<String> onChanged;
+  final int currentValue;
+  final Map<int, String> items;
+  final ValueChanged<int> onChanged;
 
   const TrackingCustomDropdown({
     required this.label,
@@ -20,24 +20,25 @@ class TrackingCustomDropdown extends StatelessWidget {
       children: [
         Text(label, style: Theme.of(context).textTheme.bodyMedium),
         const SizedBox(height: 4),
-        DropdownButton<String>(
+        DropdownButton<int>(
           isExpanded: true,
-          value: items.contains(currentValue) ? currentValue : items.first,
+          value:
+              items.containsKey(currentValue) ? currentValue : items.keys.first,
           dropdownColor: Theme.of(context).colorScheme.surface,
-          items: items.map((item) {
-            return DropdownMenuItem(
-              value: item,
+          items: items.entries.map((entry) {
+            return DropdownMenuItem<int>(
+              value: entry.key,
               child: Row(
                 children: [
                   Icon(Icons.check_circle_outline,
                       size: 16, color: Theme.of(context).colorScheme.primary),
                   const SizedBox(width: 10),
-                  Text(item),
+                  Text(entry.value),
                 ],
               ),
             );
           }).toList(),
-          onChanged: (String? newValue) {
+          onChanged: (int? newValue) {
             if (newValue != null) onChanged(newValue);
           },
         )

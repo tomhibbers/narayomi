@@ -2,7 +2,7 @@ class MangaUpdatesListSeries {
   final int seriesId;
   final String title;
   final int listId;
-  final String? listType;
+  String? listType;
   final int volume;
   final int chapter;
   final int? priority;

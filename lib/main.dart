@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart'
     as riverpod; // ✅ Import Riverpod
 import 'package:narayomi/models/content_type.dart';
+import 'package:narayomi/models/tracked_series.dart';
 import 'package:narayomi/providers/theme_provider.dart';
 import 'package:provider/provider.dart';
 import 'pages/library_page.dart';
@@ -24,6 +25,7 @@ void main() async {
   Hive.registerAdapter(ChapterAdapter());
   Hive.registerAdapter(ChapterPageAdapter());
   Hive.registerAdapter(ContentTypeAdapter());
+  Hive.registerAdapter(TrackedSeriesAdapter());
 
   // ✅ Open All Hive Boxes
   await Hive.openBox<Catalog>('catalogs');
