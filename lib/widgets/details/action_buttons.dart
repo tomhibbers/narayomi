@@ -34,12 +34,9 @@ class _ActionButtonsState extends State<ActionButtons> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (context) => FractionallySizedBox(
-        heightFactor: 0.9, // Constrain height to 90% of the screen
-        child: TrackingBottomDrawer(
-          publication: widget.publication,
-          onTrackingChange: widget.onTrackingChange,
-        ),
+      builder: (context) => TrackingBottomDrawer(
+        publication: widget.publication,
+        onTrackingChange: widget.onTrackingChange,
       ),
     );
   }

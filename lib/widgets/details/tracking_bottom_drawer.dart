@@ -203,42 +203,58 @@ class _TrackingBottomDrawerState extends State<TrackingBottomDrawer> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.background,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      child: _isLoading
-          ? Center(
-              child: CircularProgressIndicator()) // Spinner inside the drawer
-          : SingleChildScrollView(
-              child: _isTracked
-                  ? TrackingTrackedState(
-                      trackedTitle: _trackedTitle ?? "",
-                      listStatus: _listStatus,
-                      currentChapter: _currentChapter,
-                      score: _score,
-                      onListStatusChanged: (value) =>
-                          setState(() => _listStatus = value),
-                      onCurrentChapterChanged: (value) =>
-                          setState(() => _currentChapter = value),
-                      onScoreChanged: (value) => setState(() => _score = value),
-                      onRemoveTracking: _removeTracking,
-                      onShowOptions: _showOptionsMenu,
-                      listMapping: _listMapping,
-                      service: _service,
-                      seriesId: _trackedSeriesId ?? 0,
-                    )
-                  : TrackingSearchState(
-                      searchResults: _searchResults,
-                      selectedResultId: _selectedResultId,
-                      onSelectResult: _selectResult,
-                      onSearch: _searchMangaUpdates,
-                      onTrack: _trackSelectedResult,
-                    ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        double targetHeight;
+
+        if (_isLoading) {
+          targetHeight =
+              constraints.maxHeight * 0.2; // 20% height for loading spinner
+        } else {
+          targetHeight =
+              constraints.maxHeight * 0.7; // 90% height for full content
+        }
+
+        return FractionallySizedBox(
+          heightFactor: targetHeight / constraints.maxHeight,
+          child: Container(
+            padding: EdgeInsets.all(16.0),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.background,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
             ),
+            child: _isLoading
+                ? Center(child: CircularProgressIndicator()) // Spinner only
+                : SingleChildScrollView(
+                    child: _isTracked
+                        ? TrackingTrackedState(
+                            trackedTitle: _trackedTitle ?? "",
+                            listStatus: _listStatus,
+                            currentChapter: _currentChapter,
+                            score: _score,
+                            onListStatusChanged: (value) =>
+                                setState(() => _listStatus = value),
+                            onCurrentChapterChanged: (value) =>
+                                setState(() => _currentChapter = value),
+                            onScoreChanged: (value) =>
+                                setState(() => _score = value),
+                            onRemoveTracking: _removeTracking,
+                            onShowOptions: _showOptionsMenu,
+                            listMapping: _listMapping,
+                            service: _service,
+                            seriesId: _trackedSeriesId ?? 0,
+                          )
+                        : TrackingSearchState(
+                            searchResults: _searchResults,
+                            selectedResultId: _selectedResultId,
+                            onSelectResult: _selectResult,
+                            onSearch: _searchMangaUpdates,
+                            onTrack: _trackSelectedResult,
+                          ),
+                  ),
+          ),
+        );
+      },
     );
   }
 
