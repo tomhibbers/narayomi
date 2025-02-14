@@ -108,6 +108,12 @@ class _TrackingBottomDrawerState extends State<TrackingBottomDrawer> {
     widget.onTrackingChange(); // Notify DetailsPage to refresh its state
   }
 
+  Future<void> _removeTrackingEntry(String publicationId) async {
+    log("Removed tracking entry for ${publicationId}");
+    await TrackedSeriesDatabase.deleteTrackedSeries(publicationId);
+    widget.onTrackingChange(); // Notify DetailsPage to refresh its state
+  }
+
   void _trackSelectedResult() async {
     final selectedResult = _searchResults
         .firstWhere((result) => result['id'] == _selectedResultId);
@@ -141,8 +147,7 @@ class _TrackingBottomDrawerState extends State<TrackingBottomDrawer> {
 
         await _addTrackingEntry(newTrackedSeries);
         log("Successfully added tracking for seriesId $seriesId");
-        // 🔥 Notify DetailsPage to refresh its state
-        widget.onTrackingChange();
+        widget.onTrackingChange(); // Notify DetailsPage to refresh its state
       } else {
         log("Failed to track series.");
       }
@@ -170,8 +175,9 @@ class _TrackingBottomDrawerState extends State<TrackingBottomDrawer> {
         });
         log("Removed tracking for series $_trackedSeriesId.");
 
-        // 🔥 Notify DetailsPage to refresh its state
-        widget.onTrackingChange();
+        await _removeTrackingEntry(widget.publication.id);
+        log("Successfully removed tracking for seriesId $_trackedSeriesId");
+        widget.onTrackingChange(); // Notify DetailsPage to refresh its state
       } else {
         log("Failed to remove tracking for series $_trackedSeriesId.");
       }
@@ -212,7 +218,7 @@ class _TrackingBottomDrawerState extends State<TrackingBottomDrawer> {
               constraints.maxHeight * 0.2; // 20% height for loading spinner
         } else {
           targetHeight =
-              constraints.maxHeight * 0.7; // 90% height for full content
+              constraints.maxHeight * 0.7; // 70% height for full content
         }
 
         return FractionallySizedBox(
