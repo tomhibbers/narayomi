@@ -41,9 +41,11 @@ class _LibraryPageState extends ConsumerState<LibraryPage> // ✅ Change this
         bottom: TabBar(
           controller: _tabController,
           tabs: [
-            Tab(text: "Novels"),
-            Tab(text: "Comics"),
+            Tab(text: "Novels", icon: Icon(Icons.library_books_outlined)),
+            Tab(text: "Comics", icon: Icon(Icons.collections_outlined)),
           ],
+          labelColor: Theme.of(context).colorScheme.secondary,
+          indicatorColor: Theme.of(context).colorScheme.secondary,
         ),
         actions: [
           /// ✅ Toggle Button (Switch List/Grid View)

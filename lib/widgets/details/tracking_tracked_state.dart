@@ -146,8 +146,19 @@ class TrackingTrackedState extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text("Title: $trackedTitle",
-            style: Theme.of(context).textTheme.bodyLarge),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text("Title: $trackedTitle",
+                style: Theme.of(context).textTheme.bodyLarge),
+            ElevatedButton(
+              onPressed: () => _confirmRemoveTracking(context),
+              child: Text("Remove Tracking",
+                  style: TextStyle(
+                      color: Theme.of(context).colorScheme.secondary)),
+            ),
+          ],
+        ),
         const SizedBox(height: 10),
 
         // List Dropdown
@@ -181,11 +192,6 @@ class TrackingTrackedState extends StatelessWidget {
           currentValue: score,
           items: List.generate(11, (i) => i.toString()).asMap(),
           onChanged: (value) => _handleScoreChange(value),
-        ),
-        const SizedBox(height: 10),
-        ElevatedButton(
-          onPressed: () => _confirmRemoveTracking(context),
-          child: Text("Remove Tracking"),
         ),
       ],
     );

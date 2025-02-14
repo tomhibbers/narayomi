@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:narayomi/models/content_type.dart';
 import 'package:narayomi/models/publication.dart';
 
 class PublicationInfo extends StatelessWidget {
@@ -25,9 +26,9 @@ class PublicationInfo extends StatelessWidget {
               : Container(
                   width: 100,
                   height: 140,
-                  color: Colors.grey[800], // ✅ Placeholder background
+                  color: Theme.of(context).colorScheme.background, // ✅ Placeholder background
                   child: Icon(Icons.image,
-                      color: Colors.grey[600], size: 50), // ✅ Placeholder Icon
+                      color: Theme.of(context).colorScheme.background, size: 50), // ✅ Placeholder Icon
                 ),
         ),
         SizedBox(width: 12),
@@ -44,21 +45,25 @@ class PublicationInfo extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color:
-                      Colors.white, // ✅ Ensures visibility on dark backgrounds
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onBackground, // ✅ Ensures visibility on dark backgrounds
                 ),
               ),
               SizedBox(height: 4),
               Row(
                 children: [
-                  Icon(Icons.person, size: 18, color: Colors.white70),
+                  Icon(Icons.person,
+                      size: 18, color: Theme.of(context).colorScheme.secondary),
                   SizedBox(width: 6),
                   Expanded(
                     child: Text(
                       publication.author?.isNotEmpty == true
                           ? publication.author!
                           : "Unknown Author",
-                      style: TextStyle(fontSize: 16, color: Colors.white70),
+                      style: TextStyle(
+                          fontSize: 16,
+                          color: Theme.of(context).colorScheme.onBackground),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -68,13 +73,29 @@ class PublicationInfo extends StatelessWidget {
               Row(
                 children: [
                   Icon(Icons.check_circle_outline,
-                      size: 18, color: Colors.greenAccent),
+                      size: 18, color: Theme.of(context).colorScheme.secondary),
                   SizedBox(width: 6),
                   Text(
                     publication.status?.isNotEmpty == true
                         ? publication.status!
                         : "Unknown Status",
-                    style: TextStyle(fontSize: 16, color: Colors.white70),
+                    style: TextStyle(
+                        fontSize: 16,
+                        color: Theme.of(context).colorScheme.onBackground),
+                  ),
+                ],
+              ),
+              SizedBox(height: 4),
+              Row(
+                children: [
+                  Icon(Icons.import_contacts_outlined,
+                      size: 18, color: Theme.of(context).colorScheme.secondary),
+                  SizedBox(width: 6),
+                  Text(
+                    publication.type == ContentType.Novel ? "Novel" : "Comic",
+                    style: TextStyle(
+                        fontSize: 16,
+                        color: Theme.of(context).colorScheme.onBackground),
                   ),
                 ],
               ),

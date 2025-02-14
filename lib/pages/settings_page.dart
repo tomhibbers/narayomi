@@ -138,10 +138,10 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             const SizedBox(height: 10),
             ElevatedButton.icon(
               onPressed: () => _clearDatabase(context),
-              icon: Icon(Icons.delete, color: Colors.white),
-              label: Text("Clear Hive Database"),
+              icon: Icon(Icons.delete, color: Theme.of(context).colorScheme.onError),
+              label: Text("Clear Hive Database", style: TextStyle(color: Theme.of(context).colorScheme.onError)),
               style:
-                  ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+                  ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
             ),
             const SizedBox(height: 30),
             Divider(),
@@ -150,12 +150,16 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 10),
             ElevatedButton(
+              style: ButtonStyle(
+                backgroundColor: MaterialStateProperty.all(
+                    Theme.of(context).colorScheme.onPrimaryContainer),
+              ),
               onPressed: _isLoggedIn
                   ? () => _disconnect(context)
                   : () => _connect(context),
               child: Text(_isLoggedIn
                   ? "Disconnect from MangaUpdates"
-                  : "Connect to MangaUpdates"),
+                  : "Connect to MangaUpdates", style: TextStyle(color: Theme.of(context).colorScheme.secondary)),
             ),
           ],
         ),

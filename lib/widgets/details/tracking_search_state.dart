@@ -55,7 +55,9 @@ class _TrackingSearchState extends State<TrackingSearchState> {
               if (widget.selectedResultId != null)
                 ElevatedButton(
                   onPressed: widget.onTrack,
-                  child: Text("Add Tracking"),
+                  child: Text("Add Tracking",
+                      style: TextStyle(
+                          color: Theme.of(context).colorScheme.secondary)),
                 ),
             ],
           ),
@@ -65,12 +67,21 @@ class _TrackingSearchState extends State<TrackingSearchState> {
           TextField(
             controller: _controller,
             decoration: InputDecoration(
-              labelText: "Search MangaUpdates",
-              suffixIcon: IconButton(
+              hintText: "Search MangaUpdates...",
+              prefixIcon: IconButton(
                 icon: Icon(Icons.search),
                 onPressed: () => _performSearch(_controller.text),
               ),
+              filled: true,
+              fillColor: Theme.of(context).colorScheme.primaryContainer,
+              contentPadding:
+                  EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(25),
+                borderSide: BorderSide.none,
+              ),
             ),
+            style: TextStyle(color: Theme.of(context).colorScheme.onBackground),
             onSubmitted: _performSearch,
           ),
           const SizedBox(height: 20),

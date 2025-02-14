@@ -62,9 +62,11 @@ class _BrowsePageState extends State<BrowsePage>
         bottom: TabBar(
           controller: _tabController,
           tabs: [
-            Tab(text: "Novels"),
-            Tab(text: "Comics"),
+            Tab(text: "Novels", icon: Icon(Icons.library_books_outlined)),
+            Tab(text: "Comics", icon: Icon(Icons.collections_outlined)),
           ],
+          labelColor: Theme.of(context).colorScheme.secondary,
+          indicatorColor: Theme.of(context).colorScheme.secondary,
         ),
         actions: [
           IconButton(
@@ -86,9 +88,9 @@ class _BrowsePageState extends State<BrowsePage>
               controller: _controller,
               decoration: InputDecoration(
                 hintText: "Search...",
-                prefixIcon: Icon(Icons.search, color: Colors.grey),
+                prefixIcon: Icon(Icons.search, color: Theme.of(context).colorScheme.onBackground),
                 filled: true,
-                fillColor: Colors.grey[900],
+                fillColor: Theme.of(context).colorScheme.primaryContainer,
                 contentPadding:
                     EdgeInsets.symmetric(vertical: 12, horizontal: 20),
                 border: OutlineInputBorder(
@@ -96,7 +98,7 @@ class _BrowsePageState extends State<BrowsePage>
                   borderSide: BorderSide.none,
                 ),
               ),
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: Theme.of(context).colorScheme.onBackground),
               onSubmitted: (value) => _search(),
             ),
           ),

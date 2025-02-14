@@ -37,7 +37,7 @@ class DetailsHeader extends StatelessWidget {
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10), // ✅ Blur effect
                 child: Container(
-                  color: Colors.black.withOpacity(0.3), // ✅ Slight dark overlay for readability
+                  color: Theme.of(context).colorScheme.background.withOpacity(0.3), // ✅ Slight dark overlay for readability
                 ),
               ),
             ),
