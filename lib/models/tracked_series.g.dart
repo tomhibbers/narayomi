@@ -22,13 +22,14 @@ class TrackedSeriesAdapter extends TypeAdapter<TrackedSeries> {
       listId: fields[2] as int,
       currentChapter: fields[3] as int,
       score: fields[4] as int,
+      title: fields[5] as String,
     );
   }
 
   @override
   void write(BinaryWriter writer, TrackedSeries obj) {
     writer
-      ..writeByte(5)
+      ..writeByte(6)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -38,7 +39,9 @@ class TrackedSeriesAdapter extends TypeAdapter<TrackedSeries> {
       ..writeByte(3)
       ..write(obj.currentChapter)
       ..writeByte(4)
-      ..write(obj.score);
+      ..write(obj.score)
+      ..writeByte(5)
+      ..write(obj.title);
   }
 
   @override

@@ -19,11 +19,15 @@ class TrackedSeries extends HiveObject {
   @HiveField(4)
   final int score;
 
+  @HiveField(5)
+  final String title;
+
   TrackedSeries({
     required this.id,
     required this.publicationId,
     required this.listId,
     required this.currentChapter,
     required this.score,
+    required this.title,
   });
 }

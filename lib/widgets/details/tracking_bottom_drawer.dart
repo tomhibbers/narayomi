@@ -40,8 +40,8 @@ class _TrackingBottomDrawerState extends State<TrackingBottomDrawer> {
   }
 
   Future<void> _initialize() async {
-    await _fetchListMapping(); // Ensure this completes first
-    await _checkLocalTracking(); // Now check for local tracking
+    await _fetchListMapping();
+    await _checkLocalTracking();
     setState(() {
       _isLoading = false;
     });
@@ -102,18 +102,6 @@ class _TrackingBottomDrawerState extends State<TrackingBottomDrawer> {
         .key;
   }
 
-  Future<void> _addTrackingEntry(TrackedSeries newSeries) async {
-    log("Adding tracking entry for ${newSeries.publicationId}");
-    await TrackedSeriesDatabase.addOrUpdateTrackedSeries(newSeries);
-    widget.onTrackingChange(); // Notify DetailsPage to refresh its state
-  }
-
-  Future<void> _removeTrackingEntry(String publicationId) async {
-    log("Removed tracking entry for ${publicationId}");
-    await TrackedSeriesDatabase.deleteTrackedSeries(publicationId);
-    widget.onTrackingChange(); // Notify DetailsPage to refresh its state
-  }
-
   void _trackSelectedResult() async {
     final selectedResult = _searchResults
         .firstWhere((result) => result['id'] == _selectedResultId);
@@ -127,7 +115,7 @@ class _TrackingBottomDrawerState extends State<TrackingBottomDrawer> {
       if (trackingInfo != null) {
         setState(() {
           _isTracked = true;
-          _trackedSeriesId = seriesId; // Store the tracked series ID
+          _trackedSeriesId = seriesId;
           _trackedTitle = trackingInfo.title;
           _listStatus = trackingInfo.listType ?? "Unknown";
           _currentChapter = trackingInfo.chapter;
@@ -143,17 +131,23 @@ class _TrackingBottomDrawerState extends State<TrackingBottomDrawer> {
           listId: trackingInfo.listId,
           currentChapter: trackingInfo.chapter,
           score: trackingInfo.priority ?? 0,
+          title: trackingInfo.title,
         );
 
         await _addTrackingEntry(newTrackedSeries);
         log("Successfully added tracking for seriesId $seriesId");
-        widget.onTrackingChange(); // Notify DetailsPage to refresh its state
       } else {
         log("Failed to track series.");
       }
     } catch (error) {
       log("Error tracking series: $error");
     }
+  }
+
+  Future<void> _addTrackingEntry(TrackedSeries newSeries) async {
+    log("Adding tracking entry for ${newSeries.publicationId}");
+    await TrackedSeriesDatabase.addOrUpdateTrackedSeries(newSeries);
+    widget.onTrackingChange(); // Notify DetailsPage to refresh its state
   }
 
   void _removeTracking() async {
@@ -174,10 +168,7 @@ class _TrackingBottomDrawerState extends State<TrackingBottomDrawer> {
           _trackedTitle = null;
         });
         log("Removed tracking for series $_trackedSeriesId.");
-
         await _removeTrackingEntry(widget.publication.id);
-        log("Successfully removed tracking for seriesId $_trackedSeriesId");
-        widget.onTrackingChange(); // Notify DetailsPage to refresh its state
       } else {
         log("Failed to remove tracking for series $_trackedSeriesId.");
       }
@@ -186,24 +177,35 @@ class _TrackingBottomDrawerState extends State<TrackingBottomDrawer> {
     }
   }
 
+  Future<void> _removeTrackingEntry(String publicationId) async {
+    log("✅ Removing tracking entry for $publicationId...");
+    await TrackedSeriesDatabase.deleteTrackedSeries(publicationId);
+    widget.onTrackingChange(); // 🔥 Ensure the DetailsPage gets updated
+  }
+
   Future<void> _checkLocalTracking() async {
-    final trackedSeries =
-        await TrackedSeriesDatabase.getTrackedSeries(widget.publication.id);
-    if (trackedSeries != null) {
-      setState(() {
-        _isTracked = true;
-        _trackedSeriesId = trackedSeries.id;
-        _listStatus = _listMapping[trackedSeries.listId] ?? "Unknown";
-        _currentChapter = trackedSeries.currentChapter;
-        _score = trackedSeries.score;
-        _trackedTitle = "Local Tracking"; // Adjust this as needed
-      });
-      log("Found local tracking for publication ${widget.publication.id}");
-    } else {
-      log("No local tracking found for publication ${widget.publication.id}");
+    try {
+      final trackedSeries =
+          await TrackedSeriesDatabase.getTrackedSeries(widget.publication.id);
+
+      if (trackedSeries != null) {
+        setState(() {
+          _isTracked = true;
+          _trackedSeriesId = trackedSeries.id;
+          _listStatus = _listMapping[trackedSeries.listId] ?? "Unknown";
+          _currentChapter = trackedSeries.currentChapter;
+          _score = trackedSeries.score;
+          _trackedTitle = trackedSeries.title;
+        });
+      } else {
+        log("❌ No tracked series found for ${widget.publication.id}");
+      }
+    } catch (error) {
+      log("❌ Error while fetching local tracking: $error");
     }
+
     setState(() {
-      _isLoading = false; // Mark loading as complete
+      _isLoading = false; // Ensure loading is stopped
     });
   }
 

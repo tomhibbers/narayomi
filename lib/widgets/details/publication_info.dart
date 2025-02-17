@@ -26,9 +26,12 @@ class PublicationInfo extends StatelessWidget {
               : Container(
                   width: 100,
                   height: 140,
-                  color: Theme.of(context).colorScheme.background, // ✅ Placeholder background
+                  color: Theme.of(context)
+                      .colorScheme
+                      .background, // ✅ Placeholder background
                   child: Icon(Icons.image,
-                      color: Theme.of(context).colorScheme.background, size: 50), // ✅ Placeholder Icon
+                      color: Theme.of(context).colorScheme.background,
+                      size: 50), // ✅ Placeholder Icon
                 ),
         ),
         SizedBox(width: 12),
@@ -88,8 +91,12 @@ class PublicationInfo extends StatelessWidget {
               SizedBox(height: 4),
               Row(
                 children: [
-                  Icon(Icons.import_contacts_outlined,
-                      size: 18, color: Theme.of(context).colorScheme.secondary),
+                  Icon(
+                      publication.type == ContentType.Novel
+                          ? Icons.library_books_outlined
+                          : Icons.collections_outlined,
+                      size: 18,
+                      color: Theme.of(context).colorScheme.secondary),
                   SizedBox(width: 6),
                   Text(
                     publication.type == ContentType.Novel ? "Novel" : "Comic",

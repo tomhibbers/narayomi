@@ -66,6 +66,8 @@ class _DetailsPageState extends ConsumerState<DetailsPage> {
       });
       log("Tracking found for publication ${widget.publication.id}");
     } else {
+      _isTracked = false;
+      _trackedSeries = null;
       log("No tracking found for publication ${widget.publication.id}");
     }
   }
@@ -87,6 +89,7 @@ class _DetailsPageState extends ConsumerState<DetailsPage> {
         listId: latestTrackingInfo.listId,
         currentChapter: latestTrackingInfo.chapter,
         score: latestTrackingInfo.priority ?? 0,
+        title: latestTrackingInfo.title,
       );
 
       await TrackedSeriesDatabase.addOrUpdateTrackedSeries(updatedSeries);
@@ -102,8 +105,13 @@ class _DetailsPageState extends ConsumerState<DetailsPage> {
   }
 
   void trackingChanged() async {
-    log("Tracking status changed. Refreshing...");
-    await _fetchTrackingStatus();
+    log("🚀 Tracking status changed. Refreshing UI...");
+
+    await _fetchTrackingStatus(); // ✅ Reload tracking status
+
+    setState(() {
+      log("✅ State updated in DetailsPage!");
+    });
   }
 
   @override
