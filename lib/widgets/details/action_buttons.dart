@@ -60,11 +60,19 @@ class _ActionButtonsState extends State<ActionButtons> {
     if (isInLibrary) {
       box.delete(widget.publication.id);
       Fluttertoast.showToast(
-          msg: "Removed from Library", gravity: ToastGravity.BOTTOM);
+          msg: "Removed from Library",
+          gravity: ToastGravity.BOTTOM,
+          toastLength: Toast.LENGTH_SHORT,
+          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+          textColor: Theme.of(context).colorScheme.onBackground);
     } else {
       box.put(widget.publication.id, widget.publication);
       Fluttertoast.showToast(
-          msg: "Added to Library", gravity: ToastGravity.BOTTOM);
+          msg: "Added to Library",
+          gravity: ToastGravity.BOTTOM,
+          toastLength: Toast.LENGTH_SHORT,
+          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+          textColor: Theme.of(context).colorScheme.onBackground);
     }
 
     setState(() {

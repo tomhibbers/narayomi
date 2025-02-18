@@ -1,5 +1,6 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 import 'package:narayomi/models/publication.dart';
 import 'package:narayomi/models/tracked_series.dart';
 import 'package:narayomi/utils/tracked_series_database.dart';
@@ -178,9 +179,8 @@ class _TrackingBottomDrawerState extends State<TrackingBottomDrawer> {
   }
 
   Future<void> _removeTrackingEntry(String publicationId) async {
-    log("✅ Removing tracking entry for $publicationId...");
     await TrackedSeriesDatabase.deleteTrackedSeries(publicationId);
-    widget.onTrackingChange(); // 🔥 Ensure the DetailsPage gets updated
+    widget.onTrackingChange(); 
   }
 
   Future<void> _checkLocalTracking() async {
@@ -193,7 +193,8 @@ class _TrackingBottomDrawerState extends State<TrackingBottomDrawer> {
           _isTracked = true;
           _trackedSeriesId = trackedSeries.id;
           _listStatus = _listMapping[trackedSeries.listId] ?? "Unknown";
-          _currentChapter = trackedSeries.currentChapter;
+          _currentChapter =
+              trackedSeries.currentChapter; // ✅ Ensure this updates
           _score = trackedSeries.score;
           _trackedTitle = trackedSeries.title;
         });
@@ -205,7 +206,7 @@ class _TrackingBottomDrawerState extends State<TrackingBottomDrawer> {
     }
 
     setState(() {
-      _isLoading = false; // Ensure loading is stopped
+      _isLoading = false;
     });
   }
 
@@ -251,6 +252,7 @@ class _TrackingBottomDrawerState extends State<TrackingBottomDrawer> {
                             listMapping: _listMapping,
                             service: _service,
                             seriesId: _trackedSeriesId ?? 0,
+                            publicationId: widget.publication.id,
                           )
                         : TrackingSearchState(
                             searchResults: _searchResults,

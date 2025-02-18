@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:narayomi/pages/webview_page.dart';
 import 'package:narayomi/models/chapter.dart';
 
@@ -37,7 +38,9 @@ class ReadingBottomBar extends StatelessWidget {
           children: [
             IconButton(
               icon: Icon(Icons.arrow_back,
-                  color: hasPrevious ? Theme.of(context).colorScheme.onBackground : Theme.of(context).colorScheme.onBackground),
+                  color: hasPrevious
+                      ? Theme.of(context).colorScheme.onBackground
+                      : Theme.of(context).colorScheme.onBackground),
               onPressed: hasPrevious
                   ? () {
                       onPrevious();
@@ -46,11 +49,13 @@ class ReadingBottomBar extends StatelessWidget {
                   : null,
             ),
             IconButton(
-              icon: Icon(Icons.list, color: Theme.of(context).colorScheme.onBackground),
+              icon: Icon(Icons.list,
+                  color: Theme.of(context).colorScheme.onBackground),
               onPressed: () {}, // Placeholder for chapter list
             ),
             IconButton(
-              icon: Icon(Icons.public_outlined, color: Theme.of(context).colorScheme.onBackground),
+              icon: Icon(Icons.public_outlined,
+                  color: Theme.of(context).colorScheme.onBackground),
               onPressed: () {
                 if (chapter.url.isNotEmpty) {
                   Navigator.push(
@@ -63,19 +68,26 @@ class ReadingBottomBar extends StatelessWidget {
                     ),
                   );
                 } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text("No webpage available")),
-                  );
+                  Fluttertoast.showToast(
+                      msg: "No webpage available",
+                      gravity: ToastGravity.BOTTOM,
+                      toastLength: Toast.LENGTH_SHORT,
+                      backgroundColor:
+                          Theme.of(context).colorScheme.primaryContainer,
+                      textColor: Theme.of(context).colorScheme.onBackground);
                 }
               }, // ✅ Open WebView with chapter URL
             ),
             IconButton(
-              icon: Icon(Icons.settings, color: Theme.of(context).colorScheme.onBackground),
+              icon: Icon(Icons.settings,
+                  color: Theme.of(context).colorScheme.onBackground),
               onPressed: () {}, // Placeholder for reader settings
             ),
             IconButton(
               icon: Icon(Icons.arrow_forward,
-                  color: hasNext ? Theme.of(context).colorScheme.onBackground : Theme.of(context).colorScheme.onBackground),
+                  color: hasNext
+                      ? Theme.of(context).colorScheme.onBackground
+                      : Theme.of(context).colorScheme.onBackground),
               onPressed: hasNext
                   ? () {
                       onNext();

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:url_launcher/url_launcher.dart'; // ✅ Needed to open external browser
 import 'dart:async';
 
@@ -7,13 +8,15 @@ class WebViewPage extends StatefulWidget {
   final String url;
   final String publicationTitle;
 
-  const WebViewPage({super.key, required this.url, required this.publicationTitle});
+  const WebViewPage(
+      {super.key, required this.url, required this.publicationTitle});
 
   @override
   _WebViewPageState createState() => _WebViewPageState();
 }
 
-class _WebViewPageState extends State<WebViewPage> with SingleTickerProviderStateMixin {
+class _WebViewPageState extends State<WebViewPage>
+    with SingleTickerProviderStateMixin {
   InAppWebViewController? webViewController;
   bool canGoBack = false;
   bool canGoForward = false;
@@ -47,7 +50,8 @@ class _WebViewPageState extends State<WebViewPage> with SingleTickerProviderStat
         if (currentPosition < maxScrollExtent) {
           _scrollController.jumpTo(currentPosition + 1);
         } else {
-          _scrollController.jumpTo(0); // Restart scrolling when reaching the end
+          _scrollController
+              .jumpTo(0); // Restart scrolling when reaching the end
         }
       }
     });
@@ -58,9 +62,12 @@ class _WebViewPageState extends State<WebViewPage> with SingleTickerProviderStat
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Could not open browser")),
-      );
+      Fluttertoast.showToast(
+          msg: "Could not open browser",
+          gravity: ToastGravity.BOTTOM,
+          toastLength: Toast.LENGTH_SHORT,
+          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+          textColor: Theme.of(context).colorScheme.onBackground);
     }
   }
 
@@ -89,7 +96,9 @@ class _WebViewPageState extends State<WebViewPage> with SingleTickerProviderStat
                     padding: EdgeInsets.only(right: 40),
                     child: Text(
                       currentUrl,
-                      style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onBackground),
+                      style: TextStyle(
+                          fontSize: 12,
+                          color: Theme.of(context).colorScheme.onBackground),
                     ),
                   ),
                 ],
@@ -100,17 +109,21 @@ class _WebViewPageState extends State<WebViewPage> with SingleTickerProviderStat
         actions: [
           IconButton(
             icon: Icon(Icons.arrow_back),
-            onPressed: canGoBack ? () async {
-              await webViewController?.goBack();
-              _updateNavButtons();
-            } : null,
+            onPressed: canGoBack
+                ? () async {
+                    await webViewController?.goBack();
+                    _updateNavButtons();
+                  }
+                : null,
           ),
           IconButton(
             icon: Icon(Icons.arrow_forward),
-            onPressed: canGoForward ? () async {
-              await webViewController?.goForward();
-              _updateNavButtons();
-            } : null,
+            onPressed: canGoForward
+                ? () async {
+                    await webViewController?.goForward();
+                    _updateNavButtons();
+                  }
+                : null,
           ),
           PopupMenuButton<String>(
             onSelected: (value) {

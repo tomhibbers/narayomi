@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:narayomi/providers/publication_details_provider.dart';
 import 'package:narayomi/providers/publication_provider.dart';
 import 'package:narayomi/utils/secure_storage.dart';
@@ -44,10 +45,12 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           content: MangaUpdatesLoginForm(onSuccess: () {
             Navigator.pop(context); // Close the dialog on success
             _checkLoginStatus(); // Update the button state
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                  content: Text("Successfully connected to MangaUpdates!")),
-            );
+            Fluttertoast.showToast(
+                msg: "Successfully connected to MangaUpdates!",
+                gravity: ToastGravity.BOTTOM,
+                toastLength: Toast.LENGTH_SHORT,
+                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                textColor: Theme.of(context).colorScheme.onBackground);
           }),
         );
       },
@@ -59,9 +62,12 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     setState(() {
       _isLoggedIn = false;
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Disconnected from MangaUpdates.")),
-    );
+    Fluttertoast.showToast(
+        msg: "Disconnected from MangaUpdates.",
+        gravity: ToastGravity.BOTTOM,
+        toastLength: Toast.LENGTH_SHORT,
+        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+        textColor: Theme.of(context).colorScheme.onBackground);
   }
 
   void _clearDatabase(BuildContext context) async {
@@ -88,11 +94,12 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       await Hive.deleteFromDisk();
       ref.invalidate(publicationProvider); // Use ref from ConsumerState
       ref.invalidate(publicationDetailsProvider);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text("Database cleared! Restart or refresh the app.")),
-      );
+      Fluttertoast.showToast(
+          msg: "Database cleared! Restart or refresh the app.",
+          gravity: ToastGravity.BOTTOM,
+          toastLength: Toast.LENGTH_SHORT,
+          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+          textColor: Theme.of(context).colorScheme.onBackground);
     }
   }
 
@@ -138,10 +145,13 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             const SizedBox(height: 10),
             ElevatedButton.icon(
               onPressed: () => _clearDatabase(context),
-              icon: Icon(Icons.delete, color: Theme.of(context).colorScheme.onError),
-              label: Text("Clear Hive Database", style: TextStyle(color: Theme.of(context).colorScheme.onError)),
-              style:
-                  ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
+              icon: Icon(Icons.delete,
+                  color: Theme.of(context).colorScheme.onError),
+              label: Text("Clear Hive Database",
+                  style:
+                      TextStyle(color: Theme.of(context).colorScheme.onError)),
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.error),
             ),
             const SizedBox(height: 30),
             Divider(),
@@ -157,9 +167,12 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               onPressed: _isLoggedIn
                   ? () => _disconnect(context)
                   : () => _connect(context),
-              child: Text(_isLoggedIn
-                  ? "Disconnect from MangaUpdates"
-                  : "Connect to MangaUpdates", style: TextStyle(color: Theme.of(context).colorScheme.secondary)),
+              child: Text(
+                  _isLoggedIn
+                      ? "Disconnect from MangaUpdates"
+                      : "Connect to MangaUpdates",
+                  style: TextStyle(
+                      color: Theme.of(context).colorScheme.secondary)),
             ),
           ],
         ),

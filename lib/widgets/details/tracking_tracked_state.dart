@@ -1,6 +1,9 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:narayomi/models/tracked_series.dart';
 import 'package:narayomi/services/mangaupdates_service.dart';
+import 'package:narayomi/utils/tracked_series_database.dart';
 import 'package:narayomi/widgets/details/tracking_custom_dropdown.dart';
 
 class TrackingTrackedState extends StatelessWidget {
@@ -16,6 +19,7 @@ class TrackingTrackedState extends StatelessWidget {
   final VoidCallback onRemoveTracking;
   final VoidCallback onShowOptions;
   final Map<int, String> listMapping;
+  final String publicationId;
   const TrackingTrackedState({
     required this.trackedTitle,
     required this.listStatus,
@@ -29,6 +33,7 @@ class TrackingTrackedState extends StatelessWidget {
     required this.onRemoveTracking,
     required this.onShowOptions,
     required this.listMapping,
+    required this.publicationId,
   });
 
   int _findListIdForStatus(String listStatus) {
@@ -38,35 +43,90 @@ class TrackingTrackedState extends StatelessWidget {
         .key;
   }
 
-  Future<void> _handleListChange(int newListId) async {
+  Future<void> _handleListChange(BuildContext context, int newListId) async {
     onListStatusChanged(listMapping[newListId]!);
     try {
       await service.updateTracking(seriesId, newListId);
-      log("Successfully updated list to: ${listMapping[newListId]}");
+      await TrackedSeriesDatabase.addOrUpdateTrackedSeries(TrackedSeries(
+        id: seriesId,
+        publicationId: publicationId,
+        listId: newListId,
+        currentChapter: currentChapter,
+        score: score,
+        title: trackedTitle,
+      ));
+      Fluttertoast.showToast(
+          msg: "List status updated to ${listMapping[newListId]}",
+          gravity: ToastGravity.BOTTOM,
+          toastLength: Toast.LENGTH_SHORT,
+          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+          textColor: Theme.of(context).colorScheme.onBackground);
     } catch (error) {
-      log("Failed to update list: $error");
+      Fluttertoast.showToast(
+          msg: "Failed to update list status",
+          gravity: ToastGravity.BOTTOM,
+          toastLength: Toast.LENGTH_SHORT,
+          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+          textColor: Theme.of(context).colorScheme.onBackground);
     }
   }
 
-  Future<void> _handleChapterChange(int newChapter) async {
+  Future<void> _handleChapterChange(
+      BuildContext context, int newChapter) async {
     onCurrentChapterChanged(newChapter);
     try {
       await service.updateTracking(seriesId, _findListIdForStatus(listStatus),
           chapter: newChapter);
-      log("Successfully updated chapter to: $newChapter");
+      await TrackedSeriesDatabase.addOrUpdateTrackedSeries(TrackedSeries(
+        id: seriesId,
+        publicationId: publicationId,
+        listId: _findListIdForStatus(listStatus),
+        currentChapter: newChapter,
+        score: score,
+        title: trackedTitle,
+      ));
+      Fluttertoast.showToast(
+          msg: "Chapter updated to $newChapter",
+          gravity: ToastGravity.BOTTOM,
+          toastLength: Toast.LENGTH_SHORT,
+          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+          textColor: Theme.of(context).colorScheme.onBackground);
     } catch (error) {
-      log("Failed to update chapter: $error");
+      Fluttertoast.showToast(
+          msg: "Failed to update chapter",
+          gravity: ToastGravity.BOTTOM,
+          toastLength: Toast.LENGTH_SHORT,
+          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+          textColor: Theme.of(context).colorScheme.onBackground);
     }
   }
 
-  Future<void> _handleScoreChange(int newScore) async {
+  Future<void> _handleScoreChange(BuildContext context, int newScore) async {
     onScoreChanged(newScore);
     try {
       await service.updateTracking(seriesId, _findListIdForStatus(listStatus),
           chapter: currentChapter);
-      log("Successfully updated score to: $newScore");
+      await TrackedSeriesDatabase.addOrUpdateTrackedSeries(TrackedSeries(
+        id: seriesId,
+        publicationId: publicationId,
+        listId: _findListIdForStatus(listStatus),
+        currentChapter: currentChapter,
+        score: newScore,
+        title: trackedTitle,
+      ));
+      Fluttertoast.showToast(
+          msg: "Score updated to $newScore",
+          gravity: ToastGravity.BOTTOM,
+          toastLength: Toast.LENGTH_SHORT,
+          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+          textColor: Theme.of(context).colorScheme.onBackground);
     } catch (error) {
-      log("Failed to update score: $error");
+      Fluttertoast.showToast(
+          msg: "Failed to update score",
+          gravity: ToastGravity.BOTTOM,
+          toastLength: Toast.LENGTH_SHORT,
+          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+          textColor: Theme.of(context).colorScheme.onBackground);
     }
   }
 
@@ -98,7 +158,7 @@ class TrackingTrackedState extends StatelessWidget {
     );
 
     if (manualChapter != null && manualChapter > 0) {
-      _handleChapterChange(manualChapter);
+      _handleChapterChange(context, manualChapter);
     }
   }
 
@@ -166,7 +226,7 @@ class TrackingTrackedState extends StatelessWidget {
           label: "List",
           currentValue: _findListIdForStatus(listStatus),
           items: listMapping,
-          onChanged: (value) => _handleListChange(value),
+          onChanged: (value) => _handleListChange(context, value),
         ),
         const SizedBox(height: 10),
 
@@ -180,7 +240,7 @@ class TrackingTrackedState extends StatelessWidget {
             if (value == -1) {
               _showManualChapterInputDialog(context);
             } else {
-              _handleChapterChange(value);
+              _handleChapterChange(context, value);
             }
           },
         ),
@@ -191,7 +251,7 @@ class TrackingTrackedState extends StatelessWidget {
           label: "Score",
           currentValue: score,
           items: List.generate(11, (i) => i.toString()).asMap(),
-          onChanged: (value) => _handleScoreChange(value),
+          onChanged: (value) => _handleScoreChange(context, value),
         ),
       ],
     );
