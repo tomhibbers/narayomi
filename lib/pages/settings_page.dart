@@ -1,11 +1,10 @@
 import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:narayomi/providers/publication_details_provider.dart';
 import 'package:narayomi/providers/publication_provider.dart';
 import 'package:narayomi/utils/secure_storage.dart';
+import 'package:narayomi/widgets/common/toast_utils.dart';
 import 'package:narayomi/widgets/settings/mangaupdates_login_form.dart';
 import 'package:provider/provider.dart' as legacy;
 import 'package:hive/hive.dart';
@@ -45,12 +44,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           content: MangaUpdatesLoginForm(onSuccess: () {
             Navigator.pop(context); // Close the dialog on success
             _checkLoginStatus(); // Update the button state
-            Fluttertoast.showToast(
-                msg: "Successfully connected to MangaUpdates!",
-                gravity: ToastGravity.BOTTOM,
-                toastLength: Toast.LENGTH_SHORT,
-                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                textColor: Theme.of(context).colorScheme.onBackground);
+            ToastUtils.showToast(
+                context, "Successfully connected to MangaUpdates!");
           }),
         );
       },
@@ -62,12 +57,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     setState(() {
       _isLoggedIn = false;
     });
-    Fluttertoast.showToast(
-        msg: "Disconnected from MangaUpdates.",
-        gravity: ToastGravity.BOTTOM,
-        toastLength: Toast.LENGTH_SHORT,
-        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-        textColor: Theme.of(context).colorScheme.onBackground);
+    ToastUtils.showToast(context, "Disconnected from MangaUpdates.");
   }
 
   void _clearDatabase(BuildContext context) async {
@@ -94,12 +84,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       await Hive.deleteFromDisk();
       ref.invalidate(publicationProvider); // Use ref from ConsumerState
       ref.invalidate(publicationDetailsProvider);
-      Fluttertoast.showToast(
-          msg: "Database cleared! Restart or refresh the app.",
-          gravity: ToastGravity.BOTTOM,
-          toastLength: Toast.LENGTH_SHORT,
-          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-          textColor: Theme.of(context).colorScheme.onBackground);
+
+      ToastUtils.showToast(
+          context, "Database cleared! Restart or refresh the app.");
     }
   }
 

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:narayomi/widgets/common/toast_utils.dart';
 import 'package:url_launcher/url_launcher.dart'; // ✅ Needed to open external browser
 import 'dart:async';
 
@@ -62,12 +62,7 @@ class _WebViewPageState extends State<WebViewPage>
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
-      Fluttertoast.showToast(
-          msg: "Could not open browser",
-          gravity: ToastGravity.BOTTOM,
-          toastLength: Toast.LENGTH_SHORT,
-          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-          textColor: Theme.of(context).colorScheme.onBackground);
+      ToastUtils.showToast(context, "Could not open browser");
     }
   }
 

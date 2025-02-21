@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:narayomi/pages/webview_page.dart';
 import 'package:narayomi/models/chapter.dart';
+import 'package:narayomi/widgets/common/toast_utils.dart';
 
 class ReadingBottomBar extends StatelessWidget {
   final bool isVisible;
@@ -68,13 +68,7 @@ class ReadingBottomBar extends StatelessWidget {
                     ),
                   );
                 } else {
-                  Fluttertoast.showToast(
-                      msg: "No webpage available",
-                      gravity: ToastGravity.BOTTOM,
-                      toastLength: Toast.LENGTH_SHORT,
-                      backgroundColor:
-                          Theme.of(context).colorScheme.primaryContainer,
-                      textColor: Theme.of(context).colorScheme.onBackground);
+                  ToastUtils.showToast(context, "No webpage available");
                 }
               }, // ✅ Open WebView with chapter URL
             ),

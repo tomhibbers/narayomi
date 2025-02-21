@@ -1,10 +1,9 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart'; // ✅ Import intl package
 import 'package:narayomi/models/chapter.dart';
 import 'package:narayomi/models/publication.dart';
 import 'package:narayomi/pages/reading_page.dart';
+import 'package:narayomi/utils/sorting.dart';
 
 class ChaptersComponent extends StatelessWidget {
   final List<Chapter> chapters;
@@ -20,6 +19,12 @@ class ChaptersComponent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    List<Chapter> sortedChapters =
+        List.from(chapters); // ✅ Create a new sorted list
+    sortedChapters.sort((a, b) => compareChapterNumbers(
+        extractChapterNumber(a.name),
+        extractChapterNumber(b.name))); // ✅ Sort descending
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -30,22 +35,22 @@ class ChaptersComponent extends StatelessWidget {
         ListView.builder(
           shrinkWrap: true,
           physics: NeverScrollableScrollPhysics(),
-          itemCount: chapters.length,
+          itemCount: sortedChapters.length,
           itemBuilder: (context, index) {
-            final chapter = chapters[index];
+            final chapter = sortedChapters[index];
             return ListTile(
               title: Text(chapter.name),
               subtitle:
                   Text(formatDate(chapter.dateUpload)), // ✅ Formatted date
-              trailing:
-                  Icon(Icons.arrow_forward_ios, size: 16, color: Theme.of(context).colorScheme.onBackground),
+              trailing: Icon(Icons.arrow_forward_ios,
+                  size: 16, color: Theme.of(context).colorScheme.onBackground),
               onTap: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => ReadingPage(
                       publication: publication, // ✅ Pass the publication
-                      chapters: chapters, // ✅ Pass the full chapter list
+                      chapters: sortedChapters, // ✅ Pass the full chapter list
                       initialIndex:
                           index, // ✅ Set the clicked chapter as initial
                     ),

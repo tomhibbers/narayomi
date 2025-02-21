@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive/hive.dart';
 import 'package:narayomi/models/chapter.dart';
@@ -8,6 +9,7 @@ import 'package:narayomi/models/publication.dart';
 import 'package:narayomi/models/publication_details.dart';
 import 'package:narayomi/services/comick_service.dart';
 import 'package:narayomi/services/ranobes_service.dart';
+import 'package:narayomi/widgets/common/toast_utils.dart';
 
 /// ✅ Provider for Cached Publication Details & Chapters
 final publicationDetailsProvider = StateNotifierProvider<
@@ -64,7 +66,7 @@ class PublicationDetailsNotifier
   }
 
   /// ✅ Fetch Fresh Chapters & Save to Hive (stop using publicationId)
-  Future<void> refreshPublication(Publication publication,
+  Future<void> refreshPublication(BuildContext context, Publication publication,
       {bool skipCache = false}) async {
     final normalizedId =
         publication.id.trim().toLowerCase(); // ✅ Standardized ID
@@ -95,7 +97,8 @@ class PublicationDetailsNotifier
     if (publication.type == ContentType.Novel) {
       details = await raNobesPublicationDetails(publication.url ?? "");
     } else {
-      details = await comickPublicationDetails(publication.url ?? "");
+      details = await comickPublicationDetails(publication.url ?? "", (message) => ToastUtils.showToast(context, message));
+      // details = await comickPublicationDetails(publication.url ?? "");
     }
 
     // ✅ Always save fetched details to Hive (even if not in library)

@@ -7,6 +7,7 @@ import 'package:narayomi/models/chapter.dart';
 import 'package:narayomi/models/chapter_details.dart';
 import 'package:narayomi/models/chapter_page.dart';
 import 'package:narayomi/models/publication_details.dart';
+import 'package:narayomi/utils/sorting.dart';
 import '../models/publication.dart';
 import '../models/content_type.dart';
 
@@ -116,190 +117,199 @@ Future<List<Publication>> comickSearch(String query) async {
   return completer.future;
 }
 
-Future<PublicationDetails> comickPublicationDetails(String url) async {
+Future<PublicationDetails> comickPublicationDetails(
+    String url, void Function(String) showToast) async {
   Completer<PublicationDetails> completer = Completer();
   Publication? publication;
-  List<Chapter> chapters = [];
+  List<Chapter> allChapters = [];
+
+  int page = 1;
+  bool hasMorePages = true;
+
+  // ✅ Call toast function without needing `context`
+  showToast("Fetching chapters, please wait...");
+
+  try {
+    while (hasMorePages) {
+      int prevChapterCount = allChapters.length;
+      log("📢 Fetching page $page...");
+      Publication? pagePublication =
+          await fetchChaptersForPage(url, page, allChapters);
+
+      if (page == 1 && pagePublication != null) {
+        publication = pagePublication;
+      }
+
+      if (allChapters.length == prevChapterCount) {
+        hasMorePages = false;
+      } else {
+        page++;
+      }
+    }
+
+    if (publication == null) {
+      throw Exception("Failed to retrieve publication details.");
+    }
+
+    allChapters = sortChaptersByTitle(allChapters);
+
+    // ✅ Call toast function
+    showToast("Found ${allChapters.length} chapters!");
+
+    completer.complete(
+        PublicationDetails(publication: publication, chapters: allChapters));
+  } catch (e) {
+    log("❌ Error fetching publication details: $e");
+    showToast("Error: Failed to fetch chapters.");
+    completer.completeError(e);
+  }
+
+  return completer.future;
+}
+
+Future<Publication?> fetchChaptersForPage(
+    String baseUrl, int page, List<Chapter> allChapters) async {
+  Completer<void> completer = Completer();
   bool _isDisposed = false;
 
+  Publication? publication;
+
   var headlessWebView = HeadlessInAppWebView(
-      initialUrlRequest: URLRequest(url: WebUri(url)),
+      initialUrlRequest: URLRequest(url: WebUri("$baseUrl?page=$page&lang=en")),
       onLoadStop: (controller, url) async {
-        var currentUrl = url?.toString() ?? "";
         if (_isDisposed) return;
 
         try {
-          await Future.delayed(Duration(seconds: 2)); // Shorter wait
+          log("📢 Loading page $page...");
+          await Future.delayed(Duration(seconds: 3)); // ✅ Ensure full page load
 
-          int previousCount = 0;
           int retries = 0;
-          const int maxRetries = 3; // ✅ Lower retries (faster)
+          const int maxRetries = 5;
 
           while (retries < maxRetries) {
-            // ✅ Get HTML source
-            htmlString = await controller.evaluateJavascript(
+            String htmlString = await controller.evaluateJavascript(
                 source: "document.documentElement.outerHTML");
             Document document = html_parser.parse(htmlString);
 
-            // ✅ Count current chapters loaded
             List<Element> chapterElements =
                 document.querySelectorAll('td.customclass1');
 
-            if (chapterElements.length > previousCount) {
-              retries = 0; // ✅ Reset retries if new content is loaded
-            } else {
-              retries++; // ✅ Increase retries only if no new content loaded
+            if (chapterElements.isNotEmpty) {
+              log("✅ Found ${chapterElements.length} chapters on page $page.");
+              break; // ✅ Exit loop once content is loaded
             }
 
-            previousCount = chapterElements.length;
-
-            // ✅ Break early if a lot of chapters already loaded
-            if (previousCount > 50)
-              break; // 🔥 Adjust this threshold based on testing
-
-            // ✅ Scroll down in bigger steps for faster loading
-            await controller.evaluateJavascript(source: """
-          window.scrollBy(0, window.innerHeight * 2);
-        """);
-
-            await Future.delayed(
-                Duration(seconds: 1)); // ✅ Shorter wait per scroll
+            log("🔄 Retry $retries: Waiting for chapters...");
+            retries++;
+            await Future.delayed(Duration(seconds: 2));
           }
 
-          Document document = html_parser.parse(htmlString);
+          if (retries == maxRetries) {
+            log("⚠️ No chapters found on page $page. Possibly last page.");
+            completer.complete();
+            return;
+          }
 
-          // ✅ Extract Title
-          String title = document
-                  .querySelector(
-                      'h1.md\\:hidden.col-span-3.break-words.max-md\\:mb-4')
+          log("exit fetchChaptersForPage while loop");
+
+          String publicationId = baseUrl.split('/').last;
+          String normalizedPublicationId =
+              publicationId.toLowerCase().replaceAll('-', '_');
+
+          Document document = html_parser.parse(
+              await controller.evaluateJavascript(
+                  source: "document.documentElement.outerHTML"));
+
+          // ✅ Extract publication info (only for page 1)
+          if (page == 1) {
+            String? extractedTitle = document.querySelector('h1')?.text.trim();
+
+            if (extractedTitle == null || extractedTitle.isEmpty) {
+              log("⚠️ Publication title could not be extracted.");
+              throw Exception("Failed to retrieve publication details.");
+            }
+
+            log("✅ Extracted publication title: $extractedTitle");
+            publication = Publication(
+              id: publicationId,
+              title: extractedTitle,
+              author: document
+                  .querySelectorAll('tr')
+                  .firstWhere((row) => row.text.contains("Authors:"),
+                      orElse: () => Element.tag('tr'))
+                  .querySelector('td.pl-2 a.link')
                   ?.text
-                  .trim() ??
-              "Unknown Title";
+                  .trim(),
+              description:
+                  document.querySelector('div.comic-desc p')?.text.trim(),
+              genres: document
+                  .querySelectorAll('tr')
+                  .firstWhere((row) => row.text.contains("Genres:"),
+                      orElse: () => Element.tag('tr'))
+                  .querySelectorAll('td.pl-2 a.link')
+                  .map((e) => e.text.trim())
+                  .toList(),
+              status: "Ongoing",
+              type: ContentType.Comic,
+              url: baseUrl,
+              thumbnailUrl: document
+                  .querySelector('div.mr-4.relative.row-span-5 img')
+                  ?.attributes['src']
+                  ?.trim(),
+              dateAdded: DateTime.now(),
+            );
+          }
 
-          String? thumbnailUrl = document
-              .querySelector('div.mr-4.relative.row-span-5 img')
-              ?.attributes['src']
-              ?.trim();
-
-          String? author = document
-              .querySelectorAll('tr') // Get all table rows
-              .firstWhere(
-                (row) => row.text.contains("Authors:"), // Find the correct row
-                orElse: () => Element.tag('tr'),
-              )
-              .querySelector('td.pl-2 a.link')
-              ?.text
-              .trim();
-
-          // ✅ Extract Genres
-          List<String> genres = document
-              .querySelectorAll('tr') // Get all table rows
-              .firstWhere(
-                (row) => row.text.contains("Genres:"), // Find the correct row
-                orElse: () => Element.tag('tr'),
-              )
-              .querySelectorAll('td.pl-2 a.link') // Get all links in that row
-              .map((e) => e.text.trim()) // Extract text
-              .toList();
-
-          String? description =
-              document.querySelector('div.comic-desc p')?.text.trim();
-
-          // ✅ Find all div elements
-          List<Element> divs = document.querySelectorAll('div');
-
-          // ✅ Locate the specific div that contains "Translation:"
-          Element? translationDiv = divs.firstWhere(
-            (div) =>
-                div.querySelector('span.text-gray-500')?.text.trim() ==
-                "Translation:",
-            orElse: () => Element.tag("div"), // Prevents null errors
-          );
-
-          // ✅ Extract status text from the span that follows
-          String? status = translationDiv?.children
-              .where((e) =>
-                  e.localName == 'span' && !e.classes.contains('text-gray-500'))
-              .map((e) => e.text.trim())
-              .join(" "); // Combine if multiple spans (though unlikely)
-
-          // ✅ Clean the extracted text
-          status = status?.replaceAll(RegExp(r'[^a-zA-Z\s]'), '').trim();
-
-          String publicationId = currentUrl.split('/').last;
-          String normalizedPublicationId = publicationId
-              .toLowerCase()
-              .replaceAll('-', '_'); // ✅ Standardized format
-
-          // ✅ Create publication object
-          publication = Publication(
-            id: publicationId,
-            title: title,
-            author: author,
-            description: description,
-            genres: genres,
-            status: status,
-            type: ContentType.Comic,
-            url: currentUrl,
-            thumbnailUrl: thumbnailUrl,
-            dateAdded: DateTime.now(),
-          );
-
-          // ✅ Select all chapter rows
-          List<Element> chapterElements =
-              document.querySelectorAll('td.customclass1');
-
-          for (var chapterElement in chapterElements) {
-            // ✅ Extract URL
+          // ✅ Extract chapters
+          for (var chapterElement
+              in document.querySelectorAll('td.customclass1')) {
             String? chapterUrl =
                 chapterElement.querySelector('a')?.attributes['href'];
-
-            // ✅ Extract Main Chapter Title (e.g., "Ch. 51")
             String? chapterNumber =
                 chapterElement.querySelector('span.font-semibold')?.text.trim();
-
-            // ✅ Extract Subtitle (if exists, e.g., "Hedgehog Hunting (5)")
             String? chapterSubtitle = chapterElement
                 .querySelector('span.text-xs.md\\:text-base')
                 ?.text
                 .trim();
-
-            // ✅ Combine title & subtitle
             String chapterTitle = chapterNumber ?? "Unknown Chapter";
+
             if (chapterSubtitle != null && chapterSubtitle.isNotEmpty) {
               chapterTitle += " - $chapterSubtitle";
             }
 
-            // ✅ Add to Chapter List
             if (chapterUrl != null) {
-              chapters.add(Chapter(
+              allChapters.add(Chapter(
                 id: "$publicationId-$chapterTitle"
                     .hashCode, // ✅ Unique chapter ID
                 publicationId: -1, // ❌ Dummy value, ignored
                 normalizedPublicationId:
-                    normalizedPublicationId, // ✅ Only use this for lookups
+                    normalizedPublicationId, // ✅ Correct format
                 name: chapterTitle,
                 url: "https://comick.io$chapterUrl", // Append base URL
                 dateUpload: null, // ✅ Date extraction can be added later
               ));
             }
           }
+
+          log("✅ Finished scraping page $page");
+          completer.complete();
         } catch (e) {
-          log("❌ Error during scraping: $e");
-        } finally {
-          if (!_isDisposed) {
-            _isDisposed = true;
-            controller.dispose();
-          }
-          if (!completer.isCompleted) {
-            completer.complete(PublicationDetails(
-                publication: publication!, chapters: chapters));
-          }
+          log("❌ Error during scraping page $page: $e");
+          completer.completeError(e);
         }
       });
 
   await headlessWebView.run();
-  return completer.future;
+  await completer.future; // ✅ Ensure function waits
+
+  // ✅ Dispose WebView only after work is complete
+  if (!_isDisposed) {
+    _isDisposed = true;
+    log("🛑 Disposing WebView for page $page");
+    headlessWebView.dispose();
+  }
+
+  return publication; // ✅ Only returns non-null on page 1
 }
 
 Future<ChapterDetails> comickChapterDetails(

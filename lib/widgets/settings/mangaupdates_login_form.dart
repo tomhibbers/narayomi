@@ -1,8 +1,8 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:narayomi/services/mangaupdates_service.dart';
+import 'package:narayomi/widgets/common/toast_utils.dart';
 
 class MangaUpdatesLoginForm extends StatefulWidget {
   final VoidCallback onSuccess;
@@ -29,12 +29,7 @@ class _MangaUpdatesLoginFormState extends State<MangaUpdatesLoginForm> {
     if (success) {
       widget.onSuccess();
     } else {
-      Fluttertoast.showToast(
-          msg: "Login failed. Please try again.",
-          gravity: ToastGravity.BOTTOM,
-          toastLength: Toast.LENGTH_SHORT,
-          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-          textColor: Theme.of(context).colorScheme.onBackground);
+      ToastUtils.showToast(context, "Login failed. Please try again.");
     }
   }
 

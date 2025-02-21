@@ -1,9 +1,9 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:narayomi/models/tracked_series.dart';
 import 'package:narayomi/services/mangaupdates_service.dart';
 import 'package:narayomi/utils/tracked_series_database.dart';
+import 'package:narayomi/widgets/common/toast_utils.dart';
 import 'package:narayomi/widgets/details/tracking_custom_dropdown.dart';
 
 class TrackingTrackedState extends StatelessWidget {
@@ -55,19 +55,10 @@ class TrackingTrackedState extends StatelessWidget {
         score: score,
         title: trackedTitle,
       ));
-      Fluttertoast.showToast(
-          msg: "List status updated to ${listMapping[newListId]}",
-          gravity: ToastGravity.BOTTOM,
-          toastLength: Toast.LENGTH_SHORT,
-          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-          textColor: Theme.of(context).colorScheme.onBackground);
+      ToastUtils.showToast(
+          context, "List status updated to ${listMapping[newListId]}");
     } catch (error) {
-      Fluttertoast.showToast(
-          msg: "Failed to update list status",
-          gravity: ToastGravity.BOTTOM,
-          toastLength: Toast.LENGTH_SHORT,
-          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-          textColor: Theme.of(context).colorScheme.onBackground);
+      ToastUtils.showToast(context, "Failed to update list status");
     }
   }
 
@@ -85,19 +76,9 @@ class TrackingTrackedState extends StatelessWidget {
         score: score,
         title: trackedTitle,
       ));
-      Fluttertoast.showToast(
-          msg: "Chapter updated to $newChapter",
-          gravity: ToastGravity.BOTTOM,
-          toastLength: Toast.LENGTH_SHORT,
-          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-          textColor: Theme.of(context).colorScheme.onBackground);
+      ToastUtils.showToast(context, "Chapter updated to $newChapter");
     } catch (error) {
-      Fluttertoast.showToast(
-          msg: "Failed to update chapter",
-          gravity: ToastGravity.BOTTOM,
-          toastLength: Toast.LENGTH_SHORT,
-          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-          textColor: Theme.of(context).colorScheme.onBackground);
+      ToastUtils.showToast(context, "Failed to update chapter");
     }
   }
 
@@ -114,19 +95,9 @@ class TrackingTrackedState extends StatelessWidget {
         score: newScore,
         title: trackedTitle,
       ));
-      Fluttertoast.showToast(
-          msg: "Score updated to $newScore",
-          gravity: ToastGravity.BOTTOM,
-          toastLength: Toast.LENGTH_SHORT,
-          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-          textColor: Theme.of(context).colorScheme.onBackground);
+      ToastUtils.showToast(context, "Score updated to $newScore");
     } catch (error) {
-      Fluttertoast.showToast(
-          msg: "Failed to update score",
-          gravity: ToastGravity.BOTTOM,
-          toastLength: Toast.LENGTH_SHORT,
-          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-          textColor: Theme.of(context).colorScheme.onBackground);
+      ToastUtils.showToast(context, "Failed to update score");
     }
   }
 

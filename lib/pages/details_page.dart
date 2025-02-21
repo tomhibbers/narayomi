@@ -38,11 +38,15 @@ class _DetailsPageState extends ConsumerState<DetailsPage> {
       final pubBox = await Hive.openBox<Publication>('library_v3');
       final normalizedId = widget.publication.id.trim().toLowerCase();
 
+      // ✅ Ensure `context` is available before calling provider
+
       if (!pubBox.containsKey(normalizedId)) {
         // ✅ If not in library, fetch full details
-        ref
-            .read(publicationDetailsProvider.notifier)
-            .refreshPublication(widget.publication);
+        if (mounted) {
+          ref
+              .read(publicationDetailsProvider.notifier)
+              .refreshPublication(context, widget.publication);
+        }
       } else {
         // ✅ Load from cache if available
         ref
@@ -131,7 +135,7 @@ class _DetailsPageState extends ConsumerState<DetailsPage> {
                   scrollOffset: 0,
                   onRefresh: () => ref
                       .read(publicationDetailsProvider.notifier)
-                      .refreshPublication(details.publication),
+                      .refreshPublication(context, details.publication),
                 ),
                 SliverToBoxAdapter(
                   child: Padding(

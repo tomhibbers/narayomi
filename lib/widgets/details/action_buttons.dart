@@ -1,10 +1,10 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:hive/hive.dart';
 import 'package:narayomi/models/publication.dart';
 import 'package:narayomi/models/tracked_series.dart';
 import 'package:narayomi/pages/webview_page.dart';
+import 'package:narayomi/widgets/common/toast_utils.dart';
 import 'package:narayomi/widgets/details/tracking_bottom_drawer.dart';
 
 class ActionButtons extends StatefulWidget {
@@ -59,20 +59,10 @@ class _ActionButtonsState extends State<ActionButtons> {
 
     if (isInLibrary) {
       box.delete(widget.publication.id);
-      Fluttertoast.showToast(
-          msg: "Removed from Library",
-          gravity: ToastGravity.BOTTOM,
-          toastLength: Toast.LENGTH_SHORT,
-          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-          textColor: Theme.of(context).colorScheme.onBackground);
+      ToastUtils.showToast(context, "Removed from Library");
     } else {
       box.put(widget.publication.id, widget.publication);
-      Fluttertoast.showToast(
-          msg: "Added to Library",
-          gravity: ToastGravity.BOTTOM,
-          toastLength: Toast.LENGTH_SHORT,
-          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-          textColor: Theme.of(context).colorScheme.onBackground);
+      ToastUtils.showToast(context, "Added to Library");
     }
 
     setState(() {
@@ -122,10 +112,7 @@ class _ActionButtonsState extends State<ActionButtons> {
                   ),
                 );
               } else {
-                Fluttertoast.showToast(
-                  msg: "No webpage available",
-                  gravity: ToastGravity.BOTTOM,
-                );
+                ToastUtils.showToast(context, "No webpage available");
               }
             },
             icon: Icons.public_outlined,
